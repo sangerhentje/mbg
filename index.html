@@ -138,6 +138,8 @@
             background-color: #f1f5f9; color: var(--text-main);
         }
         .form-control:focus { outline: none; border-color: var(--brand-orange); background-color: var(--white); box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1); }
+        .form-control:read-only { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; border-color: transparent; }
+        
         select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237852a9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1.2rem center; background-size: 1.2em; padding-right: 3rem; }
         select:invalid, select option[value=""] { color: #94a3b8; }
         
@@ -224,7 +226,7 @@
             90%, 100% { transform: rotate(360deg); }
         }
         .loader-text {
-            font-weight: 700; color: var(--brand-purple); font-size: 1.15rem; letter-spacing: 0.5px;
+            font-weight: 700; color: var(--brand-purple); font-size: 1.15rem; letter-spacing: 0.5px; text-align: center;
         }
 
         .admin-form-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
@@ -274,8 +276,8 @@
             <div class="card">
                 <h2 style="display: flex; align-items: center; gap: 10px;">📋 Form Kehadiran</h2>
                 <div class="form-group">
-                    <label>Tanggal</label>
-                    <input type="date" id="keh-tanggal" class="form-control" readonly style="color: var(--text-muted);">
+                    <label>Tanggal Pencatatan</label>
+                    <input type="date" id="keh-tanggal" class="form-control" readonly>
                 </div>
                 <div class="form-group">
                     <label>Pilih Kelas</label>
@@ -395,7 +397,10 @@
             <div id="sub-sppg" class="sub-page">
                 <div class="card">
                     <h2>🚚 Input SPPG</h2>
-                    <div class="form-group"><label>Waktu Tiba</label><input type="datetime-local" id="sppg-waktu" class="form-control"></div>
+                    <div class="form-group">
+                        <label>Waktu Tiba (Otomatis Tersimpan)</label>
+                        <input type="datetime-local" id="sppg-waktu" class="form-control" readonly style="opacity: 0.7;">
+                    </div>
                     <div class="form-group"><label>Kurir SPPG</label><input type="text" id="sppg-petugas" class="form-control" placeholder="Nama kurir"></div>
                     <div class="form-group"><label>Jumlah Diterima</label><input type="number" id="sppg-jumlah" class="form-control" placeholder="0" onkeydown="if(event.key==='Enter') mulaiSimpanSPPG()"></div>
                     <button class="btn" onclick="mulaiSimpanSPPG()">Lanjut Input Menu ➔</button>
@@ -660,7 +665,7 @@
             <h3>✏️ Edit SPPG</h3>
             <input type="hidden" id="edit-sppg-id">
             <div style="max-height: 55vh; overflow-y: auto; padding-right: 8px;">
-                <div class="form-group"><label>Waktu</label><input type="datetime-local" id="edit-sppg-waktu" class="form-control"></div>
+                <div class="form-group"><label>Waktu Tiba (Otomatis)</label><input type="datetime-local" id="edit-sppg-waktu" class="form-control" readonly style="opacity: 0.7;"></div>
                 <div class="form-group"><label>Kurir</label><input type="text" id="edit-sppg-petugas" class="form-control"></div>
                 <div class="form-group"><label>Jml Diterima</label><input type="number" id="edit-sppg-jumlah" class="form-control"></div>
                 <div class="form-group"><label>Menu</label>
@@ -742,7 +747,7 @@
         /* ================================================================================== */
         /* CONFIGURATION: MODE MOCK DATA (Ganti ke false jika database cloud siap digunakan)  */
         /* ================================================================================== */
-        const USE_MOCK_DATA = false; 
+        const USE_MOCK_DATA = true; 
 
         const MOCK_DATA = {
             app_settings: {
@@ -759,7 +764,8 @@
                 petugas: [
                     { nama: "Pak Hendra", tugas: "PIC Distribusi", hari: "Senin" },
                     { nama: "Mas Joko", tugas: "Pramukantor", hari: "Senin" },
-                    { nama: "Ibu Rina", tugas: "Guru Piket", hari: "Senin" }
+                    { nama: "Ibu Rina", tugas: "Guru Piket", hari: "Senin" },
+                    { nama: "Pak Hendra", tugas: "PIC Distribusi", hari: "Kamis" }
                 ]
             },
             kehadiran: [], sppg: [], personel: [], catatan_pic: []
@@ -818,7 +824,7 @@
             
             if(!dot || !text) return;
 
-            dot.className = 'db-status-dot'; // reset warna
+            dot.className = 'db-status-dot'; 
             if (status === 'connecting') {
                 text.textContent = 'Menghubungkan...';
             } else if (status === 'connected') {
@@ -1073,7 +1079,7 @@
                 const kData = todayData[kls.nama];
                 if (!kData) return;
                 const sid = kls.nama.replace(/\s+/g, '-');
-                const mbg = kData.mbg || ''; const tray = kData.tray || '';
+                const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
                 const totM = appData.murid.filter(m => m.kelas === kls.nama).length;
                 
                 const row = `<tr>
@@ -1093,13 +1099,14 @@
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
                 if(trInp) { trInp.disabled = (inputVal===0); trInp.placeholder = inputVal===0?'-':inputVal; }
             }
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan...');
-                await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
-                showLoading(false);
-            }
             appData.kehadiran[getToday()][kls][type] = inputVal;
             updateRekapitulasi();
+            
+            if(!USE_MOCK_DATA) {
+                // Background silent update, no showLoading to prevent blocking inputs
+                const req = await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
+                if(req.error) showToast('Gagal sinkron latar belakang', 'error');
+            }
         }
 
         function togglePersonelLainnya() {
@@ -1112,9 +1119,7 @@
             if(!data.tipe || !data.jumlah) return;
             
             if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan Personel...');
                 const req = await dbRequest(() => supabaseClient.from('personel').insert(data), 'personel');
-                showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
             }
             document.getElementById('mon-personel-jumlah').value=''; appData.personnel.push(data); renderPersonelList(); updateRekapitulasi();
@@ -1122,14 +1127,13 @@
 
         async function updatePersonel(id, val) {
             const jml = parseInt(val)||0;
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan...');
-                const req = await dbRequest(() => supabaseClient.from('personel').update({jumlah:jml}).eq('id',id), 'personel');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron', 'error');
-            }
             const p = appData.personnel.find(x=>x.id===id); if(p) p.jumlah = jml;
-            updateRekapitulasi(); showToast('Diperbarui', 'success');
+            updateRekapitulasi(); 
+
+            if(!USE_MOCK_DATA) {
+                const req = await dbRequest(() => supabaseClient.from('personel').update({jumlah:jml}).eq('id',id), 'personel');
+                if(req.error) return showToast('Gagal sinkron latar belakang', 'error');
+            }
         }
 
         function hapusPersonel(id) {
@@ -1147,7 +1151,7 @@
         function renderPersonelList() {
             const tbody = document.getElementById('mon-personel-list');
             if(appData.personnel.length===0) return tbody.innerHTML = '<tr><td colspan="3" class="text-center">Kosong</td></tr>';
-            tbody.innerHTML = appData.personnel.map(p => `<tr><td>${p.tipe}</td><td class="text-center"><input type="number" class="table-inline-input" value="${p.jumlah}" onchange="updatePersonel('${p.id}', this.value)"></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="hapusPersonel('${p.id}')">🗑️</button></td></tr>`).join('');
+            tbody.innerHTML = appData.personnel.map(p => `<tr><td>${p.tipe}</td><td class="text-center"><input type="number" class="table-inline-input" value="${p.jumlah ?? ''}" onchange="updatePersonel('${p.id}', this.value)"></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="hapusPersonel('${p.id}')">🗑️</button></td></tr>`).join('');
         }
 
         function updateRekapitulasi() {
@@ -1165,10 +1169,13 @@
 
         /* ==================== PAGE: PETUGAS (SPPG) ==================== */
         function mulaiSimpanSPPG() {
+            const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+            document.getElementById('sppg-waktu').value = d.toISOString().slice(0,16); // Auto-set Waktu
+            
             const w = document.getElementById('sppg-waktu').value;
             const p = document.getElementById('sppg-petugas').value;
             const j = parseInt(document.getElementById('sppg-jumlah').value);
-            if(!w || !p || !j) return showToast('Lengkapi Waktu, Nama, Jml!', 'warning');
+            if(!p || !j) return showToast('Lengkapi Nama Kurir & Jml!', 'warning');
             draftSppg = { id: crypto.randomUUID(), waktu: w, petugas: p, jumlah: j };
             openModal('sppg-menu-modal');
         }
@@ -1332,7 +1339,7 @@
             const contents = document.querySelectorAll('#page-admin .tab-content');
             for(let i=0; i<contents.length; i++) { contents[i].style.display = 'none'; contents[i].classList.remove('active'); }
             
-            const btns = document.querySelectorAll('#page-admin .tab-btn');
+            const btns = document.querySelectorAll('#page-admin .tab-pill');
             for(let i=0; i<btns.length; i++) { btns[i].classList.remove('active'); }
 
             document.getElementById(`tab-${tabId}`).style.display = 'block';
