@@ -55,12 +55,22 @@
         /* Top App Bar */
         .top-header {
             position: fixed; top: 0; left: 0; right: 0;
-            height: 65px; background: linear-gradient(135deg, var(--brand-purple-dark), var(--brand-purple));
-            color: var(--white); display: flex; align-items: center; justify-content: center;
+            height: 70px; background: linear-gradient(135deg, var(--brand-purple-dark), var(--brand-purple));
+            color: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 50; box-shadow: 0 4px 15px rgba(120, 82, 169, 0.2);
             border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
         }
-        .top-header h2 { font-size: 1.25rem; font-weight: 700; margin: 0; letter-spacing: 0.5px; color: #ffffff !important; }
+        .top-header h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 3px 0; letter-spacing: 0.5px; color: #ffffff !important; }
+
+        /* Status Koneksi Database */
+        .db-status-badge {
+            font-size: 0.65rem; background: rgba(255,255,255,0.15); padding: 3px 10px; 
+            border-radius: 12px; display: flex; align-items: center; gap: 5px;
+            border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;
+        }
+        .db-status-dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--warning); box-shadow: 0 0 5px currentColor; }
+        .db-status-dot.connected { background-color: #4ade80; color: #4ade80; }
+        .db-status-dot.error { background-color: #f87171; color: #f87171; }
 
         /* Bottom Navigation Bar */
         .bottom-nav {
@@ -83,7 +93,7 @@
 
         /* Main Content Area */
         .main-content { 
-            flex: 1; padding: 85px 15px 95px 15px; 
+            flex: 1; padding: 90px 15px 95px 15px; 
             overflow-y: auto; overflow-x: hidden; width: 100%; max-width: 800px; margin: 0 auto;
         }
         
@@ -197,12 +207,26 @@
         .toast.success { background: linear-gradient(135deg, var(--success), #047857); }
         .toast.error { background: linear-gradient(135deg, var(--danger), #b91c1c); }
 
+        /* Loader Animasi Jam Pasir (Full Screen Overlay) */
         .loader {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95); padding: 25px 40px; border-radius: 20px; z-index: 9999;
-            box-shadow: 0 20px 25px -5px rgba(120, 82, 169, 0.15); font-weight: 700; color: var(--brand-purple); text-align: center; backdrop-filter: blur(4px);
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(247, 245, 250, 0.85); backdrop-filter: blur(5px);
+            z-index: 9999; flex-direction: column; justify-content: center; align-items: center;
         }
-        .loader.show { display: block; animation: fadeIn 0.3s; }
+        .loader.show { display: flex; animation: fadeIn 0.3s; }
+        .hourglass {
+            font-size: 4rem; margin-bottom: 15px;
+            animation: spinHourglass 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        @keyframes spinHourglass {
+            0% { transform: rotate(0deg); }
+            40%, 50% { transform: rotate(180deg); }
+            90%, 100% { transform: rotate(360deg); }
+        }
+        .loader-text {
+            font-weight: 700; color: var(--brand-purple); font-size: 1.15rem; letter-spacing: 0.5px;
+        }
+
         .admin-form-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
 
         .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; border-bottom: 2px solid var(--border); }
@@ -210,8 +234,12 @@
         .tab-btn:hover { color: var(--brand-purple); }
         .tab-btn.active { color: var(--brand-purple); border-bottom-color: var(--brand-purple); }
 
+        .tab-content { display: none; animation: tabFadeIn 0.3s ease; padding-top: 5px; }
+        .tab-content.active { display: block; }
+        @keyframes tabFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
         @media (max-width: 768px) {
-            .main-content { padding: 75px 15px 85px 15px; }
+            .main-content { padding: 85px 15px 85px 15px; }
             .admin-tabs { border-bottom: none; gap: 8px; padding-bottom: 10px;}
             .tab-btn { background: rgba(120, 82, 169, 0.05); border-radius: 12px; padding: 10px 18px; font-size: 0.9rem; border: none;}
             .tab-btn.active { background: var(--brand-purple); color: white; }
@@ -220,14 +248,19 @@
 </head>
 <body>
 
+    <!-- Animasi Loader Full Screen Baru -->
     <div id="app-loader" class="loader">
-        <div style="font-size: 2.5rem; margin-bottom: 10px; animation: pulse 1s infinite alternate;">⏳</div>
-        Memproses Data...
+        <div class="hourglass">⏳</div>
+        <div id="loader-text" class="loader-text">Memproses Data...</div>
     </div>
 
     <!-- Header Atas -->
     <header class="top-header">
         <h2>Aplikasi Distribusi</h2>
+        <div id="db-status" class="db-status-badge">
+            <span id="db-status-dot" class="db-status-dot"></span>
+            <span id="db-status-text">Menghubungkan...</span>
+        </div>
     </header>
 
     <!-- Konten Utama -->
@@ -747,7 +780,16 @@
         let adminPage = { kelas: 1, guru: 1, murid: 1, petugas: 1 };
         const ADMIN_PER_PAGE = 10;
 
-        function showLoading(show) { document.getElementById('app-loader').classList.toggle('show', show); }
+        function showLoading(show, customText) { 
+            const loader = document.getElementById('app-loader');
+            const textEl = document.getElementById('loader-text');
+            if (show) {
+                if (textEl) textEl.textContent = customText || 'Memproses Data...';
+                loader.classList.add('show');
+            } else {
+                loader.classList.remove('show');
+            }
+        }
         function getToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
         function showToast(msg, type = 'success') {
@@ -769,6 +811,25 @@
         }
         function closeConfirmModal() { closeModal('confirm-modal'); }
 
+        /* ==================== STATUS KONEKSI ==================== */
+        function updateDbStatus(status) {
+            const dot = document.getElementById('db-status-dot');
+            const text = document.getElementById('db-status-text');
+            
+            if(!dot || !text) return;
+
+            dot.className = 'db-status-dot'; // reset warna
+            if (status === 'connecting') {
+                text.textContent = 'Menghubungkan...';
+            } else if (status === 'connected') {
+                dot.classList.add('connected');
+                text.textContent = USE_MOCK_DATA ? 'Terhubung (Simulasi)' : 'Terhubung ke Cloud';
+            } else if (status === 'error') {
+                dot.classList.add('error');
+                text.textContent = 'Gagal Terhubung';
+            }
+        }
+
         /* ==================== CORE DB FETCHING ==================== */
         async function dbRequest(callback, tableNameForError) {
             if (USE_MOCK_DATA) return { error: null, data: null };
@@ -786,33 +847,50 @@
         }
 
         async function fetchAllData() {
+            updateDbStatus('connecting');
+            showLoading(true, 'Menyambungkan ke Server...');
+
             if (USE_MOCK_DATA) {
                 appData.kelas = MOCK_DATA.app_settings.kelas || []; 
                 appData.guru = MOCK_DATA.app_settings.guru || [];
                 appData.murid = MOCK_DATA.app_settings.murid || []; 
                 appData.petugas = MOCK_DATA.app_settings.petugas || [];
+                updateDbStatus('connected');
+                showLoading(false);
                 return;
             }
             
-            showLoading(true);
+            let isError = false;
+
             const req = await dbRequest(() => supabaseClient.from('app_settings').select('*').eq('id', 1).single(), 'app_settings');
             if(req && req.data) { appData.kelas = req.data.kelas||[]; appData.guru = req.data.guru||[]; appData.murid = req.data.murid||[]; appData.petugas = req.data.petugas||[]; }
+            else if(req && req.error) isError = true;
             
             const today = getToday();
             const kReq = await dbRequest(() => supabaseClient.from('kehadiran').select('*').eq('tanggal', today), 'kehadiran');
             appData.kehadiran[today] = {};
             if(kReq && kReq.data) kReq.data.forEach(r => appData.kehadiran[today][r.kelas] = r);
+            else if(kReq && kReq.error) isError = true;
 
             const sReq = await dbRequest(() => supabaseClient.from('sppg').select('*').gte('waktu', today+' 00:00:00').lte('waktu', today+' 23:59:59'), 'sppg');
             if(sReq && sReq.data) appData.sppg = sReq.data;
+            else if(sReq && sReq.error) isError = true;
 
             const pReq = await dbRequest(() => supabaseClient.from('personel').select('*').eq('tanggal', today), 'personel');
             if(pReq && pReq.data) appData.personnel = pReq.data;
+            else if(pReq && pReq.error) isError = true;
 
             const cReq = await dbRequest(() => supabaseClient.from('catatan_pic').select('*').eq('tanggal', today), 'catatan_pic');
             if(cReq && cReq.data) appData.catatan_pic = cReq.data;
+            else if(cReq && cReq.error) isError = true;
             
             showLoading(false);
+
+            if (isError) {
+                updateDbStatus('error');
+            } else {
+                updateDbStatus('connected');
+            }
         }
 
         async function initApp() {
@@ -966,7 +1044,7 @@
                 renderKehadiranList(); return;
             }
 
-            showLoading(true);
+            showLoading(true, 'Menyimpan Data...');
             const req = await dbRequest(() => supabaseClient.from('kehadiran').upsert(data, { onConflict: 'tanggal, kelas' }), 'kehadiran');
             showLoading(false);
 
@@ -1015,7 +1093,11 @@
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
                 if(trInp) { trInp.disabled = (inputVal===0); trInp.placeholder = inputVal===0?'-':inputVal; }
             }
-            if(!USE_MOCK_DATA) await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
+            if(!USE_MOCK_DATA) {
+                showLoading(true, 'Menyimpan...');
+                await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
+                showLoading(false);
+            }
             appData.kehadiran[getToday()][kls][type] = inputVal;
             updateRekapitulasi();
         }
@@ -1030,7 +1112,9 @@
             if(!data.tipe || !data.jumlah) return;
             
             if(!USE_MOCK_DATA) {
+                showLoading(true, 'Menyimpan Personel...');
                 const req = await dbRequest(() => supabaseClient.from('personel').insert(data), 'personel');
+                showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
             }
             document.getElementById('mon-personel-jumlah').value=''; appData.personnel.push(data); renderPersonelList(); updateRekapitulasi();
@@ -1039,7 +1123,9 @@
         async function updatePersonel(id, val) {
             const jml = parseInt(val)||0;
             if(!USE_MOCK_DATA) {
+                showLoading(true, 'Menyimpan...');
                 const req = await dbRequest(() => supabaseClient.from('personel').update({jumlah:jml}).eq('id',id), 'personel');
+                showLoading(false);
                 if(req.error) return showToast('Gagal sinkron', 'error');
             }
             const p = appData.personnel.find(x=>x.id===id); if(p) p.jumlah = jml;
@@ -1048,7 +1134,11 @@
 
         function hapusPersonel(id) {
             showConfirmModal('Hapus personel?', async () => {
-                if(!USE_MOCK_DATA) await dbRequest(() => supabaseClient.from('personel').delete().eq('id',id), 'personel');
+                if(!USE_MOCK_DATA) {
+                    showLoading(true, 'Menghapus...');
+                    await dbRequest(() => supabaseClient.from('personel').delete().eq('id',id), 'personel');
+                    showLoading(false);
+                }
                 appData.personnel = appData.personnel.filter(x=>x.id!==id);
                 renderPersonelList(); updateRekapitulasi(); showToast('Dihapus', 'success');
             });
@@ -1115,7 +1205,7 @@
 
         async function simpanSppgKeDatabase() {
             if(!USE_MOCK_DATA) {
-                showLoading(true);
+                showLoading(true, 'Menyimpan Data...');
                 const req = await dbRequest(() => supabaseClient.from('sppg').insert(draftSppg), 'sppg');
                 showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
@@ -1159,7 +1249,7 @@
             if(editSppgFotoBase64) up.foto = editSppgFotoBase64;
 
             if(!USE_MOCK_DATA) {
-                showLoading(true);
+                showLoading(true, 'Menyimpan...');
                 const req = await dbRequest(() => supabaseClient.from('sppg').update(up).eq('id', id), 'sppg');
                 showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
@@ -1175,7 +1265,7 @@
             
             const data = { id: crypto.randomUUID(), tanggal: getToday(), nama: n, catatan: c, foto: picFotoBase64 };
             if(!USE_MOCK_DATA) {
-                showLoading(true);
+                showLoading(true, 'Menyimpan Laporan...');
                 const req = await dbRequest(() => supabaseClient.from('catatan_pic').insert(data), 'catatan_pic');
                 showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
@@ -1211,7 +1301,7 @@
             if(editPicFotoBase64) up.foto = editPicFotoBase64;
             
             if(!USE_MOCK_DATA) {
-                showLoading(true);
+                showLoading(true, 'Menyimpan...');
                 const req = await dbRequest(() => supabaseClient.from('catatan_pic').update(up).eq('id', id), 'catatan_pic');
                 showLoading(false);
                 if(req.error) return showToast('Gagal sinkron', 'error');
@@ -1240,11 +1330,12 @@
 
         function openAdminTab(tabId, btnElement) {
             const contents = document.querySelectorAll('#page-admin .tab-content');
-            for(let i=0; i<contents.length; i++) { contents[i].classList.remove('active'); }
+            for(let i=0; i<contents.length; i++) { contents[i].style.display = 'none'; contents[i].classList.remove('active'); }
             
             const btns = document.querySelectorAll('#page-admin .tab-btn');
             for(let i=0; i<btns.length; i++) { btns[i].classList.remove('active'); }
 
+            document.getElementById(`tab-${tabId}`).style.display = 'block';
             document.getElementById(`tab-${tabId}`).classList.add('active');
             if(btnElement) btnElement.classList.add('active');
 
@@ -1304,7 +1395,7 @@
 
         async function simpanMasterDataKeDB(silent = false) {
             if(!USE_MOCK_DATA) {
-                if(!silent) showLoading(true);
+                if(!silent) showLoading(true, 'Menyimpan Master Data...');
                 const req = await dbRequest(() => supabaseClient.from('app_settings').upsert({id:1, kelas:appData.kelas, guru:appData.guru, murid:appData.murid, petugas:appData.petugas}, {onConflict:'id'}), 'app_settings');
                 if(!silent) showLoading(false);
                 if(req.error && !silent) return showToast('Gagal Simpan ke Cloud', 'error');
@@ -1316,7 +1407,7 @@
             const dt = document.getElementById('hapus-tanggal').value; if(!dt) return showToast('Pilih tanggal!', 'warning');
             showConfirmModal(`PERINGATAN! Hapus permanen SEMUA histori transaksi pada tanggal ${dt}?`, async () => {
                 if(!USE_MOCK_DATA) {
-                    showLoading(true);
+                    showLoading(true, 'Menghapus Data...');
                     await dbRequest(() => supabaseClient.from('kehadiran').delete().eq('tanggal', dt), 'kehadiran');
                     await dbRequest(() => supabaseClient.from('personel').delete().eq('tanggal', dt), 'personel');
                     await dbRequest(() => supabaseClient.from('sppg').delete().gte('waktu', dt+' 00:00:00').lte('waktu', dt+' 23:59:59'), 'sppg');
@@ -1334,7 +1425,7 @@
 
         /* ==================== MODULE: EXPORT PDF & JPG ==================== */
         async function generatePDF() {
-            showLoading(true);
+            showLoading(true, 'Menyiapkan Laporan PDF...');
             try {
                 const tg = document.getElementById('report-date').value;
                 let sppgData=[], perData=[], kehData=[], catData=[];
@@ -1413,7 +1504,7 @@
         }
 
         async function generateJPG() {
-            showLoading(true);
+            showLoading(true, 'Menyiapkan Laporan JPG...');
             try {
                 let tTrm = appData.sppg.reduce((s, x) => s+(x.jumlah||0), 0);
                 let tDis = appData.personnel.reduce((s, x) => s+(x.jumlah||0), 0);
