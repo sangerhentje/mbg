@@ -247,7 +247,7 @@
 </head>
 <body>
 
-    <!-- Animasi Loader Full Screen Baru -->
+    <!-- Animasi Loader Full Screen -->
     <div id="app-loader" class="loader">
         <div class="hourglass">⏳</div>
         <div id="loader-text" class="loader-text">Memproses Data...</div>
@@ -255,21 +255,26 @@
 
     <!-- Header Atas -->
     <header class="top-header">
-        <h2>Aplikasi Distribusi</h2>
+        <h2>Pencatatan dan Distribusi Makanan</h2>
         <div id="db-status" class="db-status-badge">
             <span id="db-status-dot" class="db-status-dot"></span>
             <span id="db-status-text">Menghubungkan...</span>
         </div>
     </header>
 
-    <!-- Konten Utama -->
     <main class="main-content">
 
+        <!-- ALERT INFO JIKA DATABASE KOSONG / RLS AKTIF -->
+        <div id="rls-warning-banner" class="card hidden" style="background: #fffbeb; border: 1.5px solid #fef3c7; color: #b45309; padding: 16px; border-radius: 16px; margin-bottom: 20px;">
+            <p style="font-size: 0.85rem; font-weight: 600; line-height: 1.5;">
+                ⚠️ <b>Catatan Sistem:</b> Data master terdeteksi kosong. Jika Anda sudah mengonfigurasi Supabase, pastikan kebijakan <b>Row Level Security (RLS)</b> pada tabel <code>app_settings</code>, <code>kehadiran</code>, <code>sppg</code>, <code>personel</code>, dan <code>catatan_pic</code> telah dinonaktifkan atau diberikan akses Publik (Anonymously Read/Write).
+            </p>
+        </div>
+
         <!-- ========================================== -->
-        <!-- HALAMAN 1: KEHADIRAN (LANDING PAGE)        -->
+        <!-- HALAMAN 1: KEHADIRAN (LANDING PAGE PUBLIK) -->
         <!-- ========================================== -->
         <section id="page-kehadiran" class="page active">
-            
             <div class="card">
                 <h2 style="display: flex; align-items: center; gap: 10px;">📋 Form Kehadiran</h2>
                 <div class="form-group">
@@ -320,7 +325,6 @@
         <!-- HALAMAN 2: PETUGAS (DASHBOARD PETUGAS)     -->
         <!-- ========================================== -->
         <section id="page-petugas" class="page">
-            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="margin: 0;">🧑‍💼 Panel Petugas</h2>
                 <button class="btn btn-danger btn-sm" onclick="petugasLogoutConfirm()">Log Out</button>
@@ -453,7 +457,6 @@
         <!-- HALAMAN 3: ADMIN (PENGATURAN)              -->
         <!-- ========================================== -->
         <section id="page-admin" class="page">
-            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="margin: 0;">⚙️ Panel Admin</h2>
                 <button class="btn btn-danger btn-sm" onclick="adminLogoutConfirm()">Log Out</button>
@@ -472,11 +475,14 @@
 
                 <div class="card" style="margin: 0; background: #fef2f2; border-color: #fecaca;">
                     <h3 style="color: var(--danger);">🗑️ Reset Data</h3>
-                    <p style="font-size: 0.85rem; color: #b91c1c; margin-bottom: 15px;">Hapus permanen riwayat pada tanggal spesifik.</p>
-                    <div style="display: flex; gap: 10px;">
+                    <p style="font-size: 0.85rem; color: #b91c1c; margin-bottom: 15px;">Hapus permanen riwayat pada tanggal spesifik atau semua data sekaligus.</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <input type="date" id="hapus-tanggal" class="form-control" style="flex: 2; background: white; border-color: #fca5a5;">
-                        <button class="btn btn-danger" style="flex: 1;" onclick="hapusDataByDate()">Hapus</button>
+                        <button class="btn btn-danger btn-sm" style="flex: 1;" onclick="hapusDataByDate()">Hapus Tgl</button>
                     </div>
+                    <button class="btn btn-danger" style="width: 100%; background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="hapusSemuaDataRiwayat()">
+                        ⚠️ Hapus Seluruh Data Riwayat
+                    </button>
                 </div>
             </div>
 
@@ -617,7 +623,7 @@
         </section>
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (Tanpa tombol kehadiran karena kehadiran adalah Landing Page Publik) -->
     <nav class="bottom-nav">
         <div class="nav-item" id="btn-nav-petugas" onclick="attemptNavigate('petugas', 'mbg1234')">
             <div class="icon">🧑‍💼</div>
@@ -696,7 +702,7 @@
             </div>
             <div style="display:flex; gap:10px; margin-top: 20px;">
                 <button class="btn btn-outline" onclick="closeModal('sppg-edit-modal')">Batal</button>
-                <button class="btn btn-warning" onclick="prosesEditSPPG()">Update Data</button>
+                <button class="btn" style="background-color: var(--warning); color: white;" onclick="prosesEditSPPG()">Update Data</button>
             </div>
         </div>
     </div>
@@ -716,7 +722,7 @@
             </div>
             <div style="display:flex; gap:10px; margin-top:25px;">
                 <button class="btn btn-outline" onclick="closeModal('pic-edit-modal')">Batal</button>
-                <button class="btn btn-warning" onclick="prosesEditPIC()">Update</button>
+                <button class="btn" style="background-color: var(--warning); color: white;" onclick="prosesEditPIC()">Update</button>
             </div>
         </div>
     </div>
@@ -728,7 +734,7 @@
             <p id="logout-confirm-msg" style="margin-bottom: 25px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;"></p>
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-outline" onclick="closeModal('logout-confirm-modal')">Batal</button>
-                <button class="btn btn-danger" id="logout-confirm-btn">Ya, Log Out</button>
+                <button class="btn" id="logout-confirm-btn">Ya, Log Out</button>
             </div>
         </div>
     </div>
@@ -736,8 +742,8 @@
     <!-- Modal Konfirmasi Umum -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-content text-center">
-            <h3 style="margin-bottom: 15px;">Konfirmasi</h3>
-            <p id="confirm-message" style="margin-bottom: 25px; color: var(--text-muted); font-size: 0.95rem;"></p>
+            <h3>Konfirmasi</h3>
+            <p id="confirm-message" style="margin-bottom: 25px; color: var(--text-muted); font-size: 0.95rem; margin-top: 10px;"></p>
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-outline" onclick="closeConfirmModal()">Batal</button>
                 <button class="btn" id="confirm-btn">Lanjutkan</button>
@@ -749,43 +755,14 @@
     <div id="rls-modal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color: var(--danger); margin-bottom: 15px;">Akses Ditolak Server</h3>
-            <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">Kebijakan keamanan pada tabel <strong id="rls-table-name" style="color: var(--brand-purple);"></strong> memblokir operasi ini. Harap nonaktifkan RLS di database cloud.</p>
-            <button class="btn mt-3" style="width: 100%; margin-top: 20px;" onclick="closeModal('rls-modal')">Tutup</button>
+            <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">Kebijakan keamanan (RLS) pada tabel <strong id="rls-table-name" style="color: var(--brand-purple);"></strong> memblokir operasi ini. Silakan periksa kembali Rule RLS Supabase Anda agar mengizinkan akses Publik tanpa autentikasi token jika aplikasi digunakan secara anonim.</p>
+            <button class="btn" style="width: 100%; margin-top: 20px;" onclick="closeModal('rls-modal')">Tutup</button>
         </div>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
 
     <script>
-        /* ================================================================================== */
-        /* CONFIGURATION: MODE MOCK DATA (Ganti ke false jika database cloud siap digunakan)  */
-        /* ================================================================================== */
-        const USE_MOCK_DATA = false; 
-
-        const MOCK_DATA = {
-            app_settings: {
-                id: 1,
-                kelas: [
-                    { nama: "X RPL 1", shift: "Pagi", jumlah: 36, wali: "Susi Susanti, S.Pd." },
-                    { nama: "X RPL 2", shift: "Pagi", jumlah: 35, wali: "Andi Darmawan, M.Kom." },
-                    { nama: "XI TKJ 1", shift: "Siang", jumlah: 32, wali: "Rina Maharani, S.T." },
-                    { nama: "XI TKJ 2", shift: "Siang", jumlah: 34, wali: "Tono Saputra, S.Pd." }
-                ],
-                guru: ["Ahmad Subarjo, S.Pd.", "Budi Setiawan, M.Pd.", "Citra Lestari, S.Kom."],
-                murid: [
-                    { nama: "Budi Utomo", kelas: "X RPL 1" }, { nama: "Ani Lestari", kelas: "X RPL 1" },
-                    { nama: "Dedi Saputra", kelas: "XI TKJ 1" }
-                ],
-                petugas: [
-                    { nama: "Pak Hendra", tugas: "PIC Distribusi", hari: "Senin" },
-                    { nama: "Mas Joko", tugas: "Pramukantor", hari: "Senin" },
-                    { nama: "Ibu Rina", tugas: "Guru Piket", hari: "Senin" },
-                    { nama: "Pak Hendra", tugas: "PIC Distribusi", hari: "Kamis" }
-                ]
-            },
-            kehadiran: [], sppg: [], personel: [], catatan_pic: []
-        };
-
         const SUPABASE_URL = 'https://cumyvujmzoqhqzigqcbx.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_F2-HyxIRAPbsms9w2Tuiqg_w4mHa2tH';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -813,7 +790,54 @@
                 loader.classList.remove('show');
             }
         }
-        function getToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+        // Return YYYY-MM-DD Lokal presisi tanpa distorsi UTC
+        function getToday() { 
+            const d = new Date(); 
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`; 
+        }
+
+        // Standardisasi parsing tanggal dari database agar tidak tergeser zona waktu lokal browser
+        function parseDatabaseDate(dateStr) {
+            if (!dateStr) return new Date();
+            // Jika string waktu tidak memiliki penanda offset atau zona UTC 'Z', tambahkan 'Z' agar dibaca stabil sebagai UTC
+            if (!/[+-]\d{2}:?\d{2}$/.test(dateStr) && !dateStr.endsWith('Z')) {
+                return new Date(dateStr.replace(' ', 'T') + 'Z');
+            }
+            return new Date(dateStr);
+        }
+
+        // Mengubah string datetime-local input (YYYY-MM-DDTHH:mm) menjadi string ISO lokal lengkap dengan offset timezone
+        function toLocalISOString(dateTimeLocalVal) {
+            if (!dateTimeLocalVal) return null;
+            const parts = dateTimeLocalVal.split('T');
+            if (parts.length !== 2) return dateTimeLocalVal;
+            
+            const d = new Date();
+            const tzOffset = -d.getTimezoneOffset();
+            const diffSign = tzOffset >= 0 ? '+' : '-';
+            const pad = (num) => String(Math.floor(Math.abs(num))).padStart(2, '0');
+            const tzString = diffSign + pad(tzOffset / 60) + ':' + pad(tzOffset % 60);
+            
+            return `${dateTimeLocalVal}:00${tzString}`;
+        }
+
+        // Mengubah ISO string / Timestamp dari database kembali ke format waktu lokal yang sesuai untuk datetime-local
+        function formatToDateTimeLocal(dateString) {
+            if (!dateString) return '';
+            const d = parseDatabaseDate(dateString);
+            if (isNaN(d.getTime())) return '';
+            
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const h = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return `${y}-${m}-${day}T${h}:${min}`;
+        }
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -838,7 +862,6 @@
         function updateDbStatus(status) {
             const dot = document.getElementById('db-status-dot');
             const text = document.getElementById('db-status-text');
-            
             if(!dot || !text) return;
 
             dot.className = 'db-status-dot'; 
@@ -846,73 +869,214 @@
                 text.textContent = 'Menghubungkan...';
             } else if (status === 'connected') {
                 dot.classList.add('connected');
-                text.textContent = USE_MOCK_DATA ? 'Terhubung (Simulasi)' : 'Terhubung ke Cloud';
+                text.textContent = 'Terhubung ke Cloud';
             } else if (status === 'error') {
                 dot.classList.add('error');
                 text.textContent = 'Gagal Terhubung';
             }
         }
 
-        /* ==================== CORE DB FETCHING ==================== */
-        async function dbRequest(callback, tableNameForError) {
-            if (USE_MOCK_DATA) return { error: null, data: null };
-            try {
-                const result = await callback();
-                if (result.error && result.error.code === '42501') { 
-                    document.getElementById('rls-table-name').textContent = tableNameForError;
-                    openModal('rls-modal');
+        /* ==================== CORE DB FETCHING WITH AUTO-RETRY ==================== */
+        // Mekanisme Exponential Backoff khusus kegagalan jaringan sejati (Network/Timeout)
+        async function dbRequest(callback, tableNameForError, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const result = await callback();
+                    if (result && result.error) {
+                        // Jika melanggar sistem kemanan RLS Supabase
+                        if (result.error.code === '42501') { 
+                            document.getElementById('rls-table-name').textContent = tableNameForError;
+                            openModal('rls-modal');
+                            return result;
+                        }
+                        // Untuk kesalahan data struktural Postgres, langsung lempar tanpa retry
+                        if (result.error.code && result.error.code.startsWith('23') || result.error.code === '42P01') {
+                            console.error(`Postgres error [${result.error.code}] pada tabel [${tableNameForError}]:`, result.error.message);
+                            return result;
+                        }
+                        throw result.error;
+                    }
+                    return result;
+                } catch (err) {
+                    console.warn(`Koneksi Supabase [${tableNameForError}] terganggu (Percobaan ${i+1}/${retries}). Mencoba kembali dalam ${delay}ms...`);
+                    if (i === retries - 1) {
+                        console.error(`Gagal menghubungkan ke tabel [${tableNameForError}] setelah ${retries} kali percobaan.`, err);
+                        return { error: err, data: null };
+                    }
+                    await new Promise(res => setTimeout(r => res(), delay));
+                    delay *= 2; 
                 }
-                return result;
-            } catch (err) {
-                console.error(`Database error [${tableNameForError}]:`, err);
-                return { error: err, data: null };
             }
         }
 
-        async function fetchAllData() {
-            updateDbStatus('connecting');
-            showLoading(true, 'Menyambungkan ke Server...');
-
-            if (USE_MOCK_DATA) {
-                appData.kelas = MOCK_DATA.app_settings.kelas || []; 
-                appData.guru = MOCK_DATA.app_settings.guru || [];
-                appData.murid = MOCK_DATA.app_settings.murid || []; 
-                appData.petugas = MOCK_DATA.app_settings.petugas || [];
-                updateDbStatus('connected');
-                showLoading(false);
-                return;
+        // Memuat semua data paralel dengan isolasi zona waktu WIB/Lokal yang aman
+        async function fetchAllData(silent = false) {
+            if (!silent) {
+                updateDbStatus('connecting');
+                showLoading(true, 'Menyambungkan ke Server...');
             }
             
+            const today = getToday();
+            
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+
             let isError = false;
 
-            const req = await dbRequest(() => supabaseClient.from('app_settings').select('*').eq('id', 1).single(), 'app_settings');
-            if(req && req.data) { appData.kelas = req.data.kelas||[]; appData.guru = req.data.guru||[]; appData.murid = req.data.murid||[]; appData.petugas = req.data.petugas||[]; }
-            else if(req && req.error) isError = true;
+            try {
+                // Konversi string pencarian zona waktu agar presisi dalam meloloskan data pagi hari (00:00 - 07:00)
+                const startISO = toLocalISOString(yesterday + 'T00:00');
+
+                const [settingsRes, kehadiranRes, sppgRes, personelRes, catatanRes] = await Promise.all([
+                    dbRequest(() => supabaseClient.from('app_settings').select('*').eq('id', 1).maybeSingle(), 'app_settings'),
+                    dbRequest(() => supabaseClient.from('kehadiran').select('*').eq('tanggal', today), 'kehadiran'),
+                    dbRequest(() => supabaseClient.from('sppg').select('*').gte('waktu', startISO), 'sppg'),
+                    dbRequest(() => supabaseClient.from('personel').select('*').eq('tanggal', today), 'personel'),
+                    dbRequest(() => supabaseClient.from('catatan_pic').select('*').eq('tanggal', today), 'catatan_pic')
+                ]);
+
+                // 1. Tangani App Settings / Master Data
+                if (settingsRes && settingsRes.data) {
+                    appData.kelas = settingsRes.data.kelas || [];
+                    appData.guru = settingsRes.data.guru || [];
+                    appData.murid = settingsRes.data.murid || [];
+                    appData.petugas = settingsRes.data.petugas || [];
+                    document.getElementById('rls-warning-banner').classList.add('hidden');
+                } else if (settingsRes && !settingsRes.data && !settingsRes.error) {
+                    console.log("Inisialisasi awal database kosong...");
+                    await dbRequest(() => supabaseClient.from('app_settings').insert({ id: 1, kelas: [], guru: [], murid: [], petugas: [] }), 'app_settings');
+                    document.getElementById('rls-warning-banner').classList.remove('hidden');
+                } else {
+                    isError = true;
+                }
+
+                // 2. Tangani Kehadiran
+                appData.kehadiran[today] = {};
+                if (kehadiranRes && kehadiranRes.data) {
+                    kehadiranRes.data.forEach(r => appData.kehadiran[today][r.kelas] = r);
+                } else if (kehadiranRes && kehadiranRes.error) {
+                    isError = true;
+                }
+
+                // 3. Tangani SPPG dengan Filter Memori Browser (Mencegah Bug Timezone Server)
+                if (sppgRes && sppgRes.data) {
+                    const localTodayStr = getToday();
+                    appData.sppg = sppgRes.data.filter(item => {
+                        const itemLocalDate = parseDatabaseDate(item.waktu).toLocaleDateString('en-CA');
+                        return itemLocalDate === localTodayStr;
+                    });
+                } else if (sppgRes && sppgRes.error) {
+                    isError = true;
+                }
+
+                // 4. Tangani Personel
+                if (personelRes && personelRes.data) {
+                    appData.personnel = personelRes.data;
+                } else if (personelRes && personelRes.error) {
+                    isError = true;
+                }
+
+                // 5. Tangani Catatan PIC
+                if (catatanRes && catatanRes.data) {
+                    appData.catatan_pic = catatanRes.data;
+                } else if (catatanRes && catatanRes.error) {
+                    isError = true;
+                }
+
+            } catch (err) {
+                console.error("Terjadi error saat pengambilan data paralel:", err);
+                isError = true;
+            }
             
-            const today = getToday();
-            const kReq = await dbRequest(() => supabaseClient.from('kehadiran').select('*').eq('tanggal', today), 'kehadiran');
-            appData.kehadiran[today] = {};
-            if(kReq && kReq.data) kReq.data.forEach(r => appData.kehadiran[today][r.kelas] = r);
-            else if(kReq && kReq.error) isError = true;
-
-            const sReq = await dbRequest(() => supabaseClient.from('sppg').select('*').gte('waktu', today+' 00:00:00').lte('waktu', today+' 23:59:59'), 'sppg');
-            if(sReq && sReq.data) appData.sppg = sReq.data;
-            else if(sReq && sReq.error) isError = true;
-
-            const pReq = await dbRequest(() => supabaseClient.from('personel').select('*').eq('tanggal', today), 'personel');
-            if(pReq && pReq.data) appData.personnel = pReq.data;
-            else if(pReq && pReq.error) isError = true;
-
-            const cReq = await dbRequest(() => supabaseClient.from('catatan_pic').select('*').eq('tanggal', today), 'catatan_pic');
-            if(cReq && cReq.data) appData.catatan_pic = cReq.data;
-            else if(cReq && cReq.error) isError = true;
-            
-            showLoading(false);
-
+            if (!silent) showLoading(false);
             if (isError) {
                 updateDbStatus('error');
             } else {
                 updateDbStatus('connected');
+                if (appData.kelas.length === 0 && appData.guru.length === 0) {
+                    document.getElementById('rls-warning-banner').classList.remove('hidden');
+                } else {
+                    document.getElementById('rls-warning-banner').classList.add('hidden');
+                }
+            }
+        }
+
+        // Sinkronisasi Selektif Real-Time Supabase Channel
+        // Hanya menarik tabel yang berubah untuk memangkas overhead jaringan browser
+        function setupRealtimeSync() {
+            try {
+                supabaseClient
+                    .channel('supabase-realtime-sync')
+                    .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+                        const table = payload.table;
+                        console.log(`Database Cloud [${table}] diperbarui. Menyinkronkan selektif...`);
+                        
+                        const today = getToday();
+                        
+                        if (table === 'app_settings') {
+                            supabaseClient.from('app_settings').select('*').eq('id', 1).maybeSingle().then(res => {
+                                if (res.data) {
+                                    appData.kelas = res.data.kelas || [];
+                                    appData.guru = res.data.guru || [];
+                                    appData.murid = res.data.murid || [];
+                                    appData.petugas = res.data.petugas || [];
+                                    const activePage = document.querySelector('.page.active')?.id;
+                                    if (activePage === 'page-kehadiran') initKehadiranPage();
+                                    else if (activePage === 'page-admin') renderAllAdminTables();
+                                }
+                            });
+                        } 
+                        else if (table === 'kehadiran') {
+                            supabaseClient.from('kehadiran').select('*').eq('tanggal', today).then(res => {
+                                if (res.data) {
+                                    appData.kehadiran[today] = {};
+                                    res.data.forEach(r => appData.kehadiran[today][r.kelas] = r);
+                                    const activePage = document.querySelector('.page.active')?.id;
+                                    if (activePage === 'page-petugas') renderMonitoringTables();
+                                    else if (activePage === 'page-kehadiran') renderKehadiranList();
+                                    updateRekapitulasi();
+                                }
+                            });
+                        } 
+                        else if (table === 'sppg') {
+                            const yesterdayDate = new Date();
+                            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+                            const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+                            const startISO = toLocalISOString(yesterday + 'T00:00');
+                            
+                            supabaseClient.from('sppg').select('*').gte('waktu', startISO).then(res => {
+                                if (res.data) {
+                                    const localTodayStr = getToday();
+                                    appData.sppg = res.data.filter(item => {
+                                        return parseDatabaseDate(item.waktu).toLocaleDateString('en-CA') === localTodayStr;
+                                    });
+                                    if (document.querySelector('.page.active')?.id === 'page-petugas') renderSPPGList();
+                                    updateRekapitulasi();
+                                }
+                            });
+                        } 
+                        else if (table === 'personel') {
+                            supabaseClient.from('personel').select('*').eq('tanggal', today).then(res => {
+                                if (res.data) {
+                                    appData.personnel = res.data;
+                                    if (document.querySelector('.page.active')?.id === 'page-petugas') renderPersonelList();
+                                    updateRekapitulasi();
+                                }
+                            });
+                        } 
+                        else if (table === 'catatan_pic') {
+                            supabaseClient.from('catatan_pic').select('*').eq('tanggal', today).then(res => {
+                                if (res.data) {
+                                    appData.catatan_pic = res.data;
+                                    if (document.querySelector('.page.active')?.id === 'page-petugas') renderCatatanPICList();
+                                }
+                            });
+                        }
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn("Gagal inisialisasi Realtime Sync. Fitur kolaboratif tidak aktif sementara.", err);
             }
         }
 
@@ -921,20 +1085,27 @@
             window.appReady = true;
             
             const select = document.getElementById('report-date');
-            for(let i=0; i<7; i++) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                const label = d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-                select.innerHTML += `<option value="${val}">${label}</option>`;
+            if (select) {
+                select.innerHTML = '';
+                for(let i=0; i<7; i++) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    const label = d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                    select.innerHTML += `<option value="${val}">${label}</option>`;
+                }
             }
-            document.getElementById('hapus-tanggal').value = getToday();
+            
+            const hapusTanggalInput = document.getElementById('hapus-tanggal');
+            if (hapusTanggalInput) hapusTanggalInput.value = getToday();
             
             await fetchAllData();
+            setupRealtimeSync();
             initKehadiranPage();
         }
 
         /* ==================== NAVIGATION LOGIC ==================== */
         let pendingTarget = '';
+        let pendingPin = '';
         
         function navigateMain(target) {
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -952,8 +1123,11 @@
                 renderAllAdminTables();
             }
 
-            document.getElementById(pageId).classList.add('active');
-            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+            const activePage = document.getElementById(pageId);
+            if(activePage) activePage.classList.add('active');
+            
+            const activeNav = document.getElementById(navId);
+            if(activeNav) activeNav.classList.add('active');
         }
 
         function attemptNavigate(target, pinCode = null) {
@@ -1013,12 +1187,11 @@
             document.querySelectorAll('#page-petugas .sub-page').forEach(el => el.classList.remove('active'));
             
             if(element) element.classList.add('active');
-            document.getElementById(`sub-${subId}`).classList.add('active');
+            const targetSub = document.getElementById(`sub-${subId}`);
+            if(targetSub) targetSub.classList.add('active');
 
             if(subId === 'sppg') {
-                const d = new Date(); 
-                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                document.getElementById('sppg-waktu').value = d.toISOString().slice(0,16);
+                document.getElementById('sppg-waktu').value = formatToDateTimeLocal(new Date());
                 renderSPPGList();
             }
             if(subId === 'laporan') renderCatatanPICList();
@@ -1031,9 +1204,10 @@
             const listHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
             const hariIni = listHari[new Date().getDay()];
             
-            document.getElementById('on-duty-day').textContent = hariIni;
+            const onDutyDayEl = document.getElementById('on-duty-day');
+            if (onDutyDayEl) onDutyDayEl.textContent = hariIni;
+            
             const petugas = (appData.petugas || []).filter(p => p.hari === hariIni);
-
             if (petugas.length === 0) { container.style.display = 'none'; return; }
             
             tbody.innerHTML = petugas.map(p => `
@@ -1046,11 +1220,24 @@
         }
 
         function initKehadiranPage() {
-            document.getElementById('keh-tanggal').value = getToday();
-            document.getElementById('keh-kelas').innerHTML = `<option value="" disabled selected>-- Pilih Kelas --</option>` + appData.kelas.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
-            document.getElementById('keh-guru').innerHTML = `<option value="" disabled selected>-- Pilih Guru --</option>` + appData.guru.map(g => `<option value="${g}">${g}</option>`).join('');
-            document.getElementById('keh-petugas').innerHTML = `<option value="" disabled selected>-- Pilih Kelas Dulu --</option>`;
-            renderOnDuty(); renderKehadiranList();
+            const tglEl = document.getElementById('keh-tanggal');
+            if (tglEl) tglEl.value = getToday();
+            
+            const kelasEl = document.getElementById('keh-kelas');
+            if (kelasEl) {
+                kelasEl.innerHTML = `<option value="" disabled selected>-- Pilih Kelas --</option>` + appData.kelas.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
+            }
+            
+            const guruEl = document.getElementById('keh-guru');
+            if (guruEl) {
+                guruEl.innerHTML = `<option value="" disabled selected>-- Pilih Guru --</option>` + appData.guru.map(g => `<option value="${g}">${g}</option>`).join('');
+            }
+            
+            const petEl = document.getElementById('keh-petugas');
+            if (petEl) petEl.innerHTML = `<option value="" disabled selected>-- Pilih Kelas Dulu --</option>`;
+            
+            renderOnDuty(); 
+            renderKehadiranList();
         }
 
         function updatePetugasDropdown() {
@@ -1061,16 +1248,14 @@
         }
 
         async function simpanKehadiran() {
-            const data = { tanggal: getToday(), kelas: document.getElementById('keh-kelas').value, guru: document.getElementById('keh-guru').value, hadir: parseInt(document.getElementById('keh-hadir').value) || 0, petugas: document.getElementById('keh-petugas').value };
+            const data = { 
+                tanggal: getToday(), 
+                kelas: document.getElementById('keh-kelas').value, 
+                guru: document.getElementById('keh-guru').value, 
+                hadir: parseInt(document.getElementById('keh-hadir').value) || 0, 
+                petugas: document.getElementById('keh-petugas').value 
+            };
             if (!data.kelas || !data.guru || !data.petugas) return showToast('Pilih Kelas, Guru, dan Siswa!', 'warning');
-            
-            if(USE_MOCK_DATA) {
-                showToast('Kehadiran disimpan (Mock)!', 'success');
-                appData.kehadiran[getToday()] = appData.kehadiran[getToday()] || {};
-                appData.kehadiran[getToday()][data.kelas] = data;
-                document.getElementById('keh-hadir').value = ''; document.getElementById('keh-kelas').selectedIndex = 0; document.getElementById('keh-guru').selectedIndex = 0; document.getElementById('keh-petugas').innerHTML = `<option value="" disabled selected>-- Pilih Kelas Dulu --</option>`;
-                renderKehadiranList(); return;
-            }
 
             showLoading(true, 'Menyimpan Data...');
             const req = await dbRequest(() => supabaseClient.from('kehadiran').upsert(data, { onConflict: 'tanggal, kelas' }), 'kehadiran');
@@ -1079,8 +1264,15 @@
             if(!req.error) {
                 showToast('Kehadiran disimpan di Server!', 'success');
                 appData.kehadiran[getToday()] = appData.kehadiran[getToday()] || {};
-                appData.kehadiran[getToday()][data.kelas] = data;
-                document.getElementById('keh-hadir').value = ''; document.getElementById('keh-kelas').selectedIndex = 0; document.getElementById('keh-guru').selectedIndex = 0; document.getElementById('keh-petugas').innerHTML = `<option value="" disabled selected>-- Pilih Kelas Dulu --</option>`;
+                
+                // CRITICAL FIX: Merge agar properti "mbg" dan "tray" yang sudah diinput sebelumnya tidak hilang tertimpa
+                const existing = appData.kehadiran[getToday()][data.kelas] || {};
+                appData.kehadiran[getToday()][data.kelas] = { ...existing, ...data };
+                
+                document.getElementById('keh-hadir').value = ''; 
+                document.getElementById('keh-kelas').selectedIndex = 0; 
+                document.getElementById('keh-guru').selectedIndex = 0; 
+                document.getElementById('keh-petugas').innerHTML = `<option value="" disabled selected>-- Pilih Kelas Dulu --</option>`;
                 renderKehadiranList();
             }
         }
@@ -1102,7 +1294,7 @@
                 if (!kData) return;
                 const sid = kls.nama.replace(/\s+/g, '-');
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
-                const totM = kls.jumlah || 0; // Menggunakan jumlah siswa dari master data kelas
+                const totM = kls.jumlah || 0; 
                 
                 const row = `<tr>
                     <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
@@ -1123,14 +1315,13 @@
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
                 if(trInp) { trInp.disabled = (inputVal===0); trInp.placeholder = inputVal===0?'-':inputVal; }
             }
-            appData.kehadiran[getToday()][kls][type] = inputVal;
+            if (appData.kehadiran[getToday()] && appData.kehadiran[getToday()][kls]) {
+                appData.kehadiran[getToday()][kls][type] = inputVal;
+            }
             updateRekapitulasi();
             
-            if(!USE_MOCK_DATA) {
-                // Background silent update, no showLoading to prevent blocking inputs
-                const req = await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
-                if(req.error) showToast('Gagal sinkron latar belakang', 'error');
-            }
+            const req = await dbRequest(() => supabaseClient.from('kehadiran').update({[type]:inputVal}).match({tanggal:getToday(), kelas:kls}), 'kehadiran');
+            if(req.error) showToast('Gagal sinkron ke Cloud', 'error');
         }
 
         function togglePersonelLainnya() {
@@ -1142,33 +1333,33 @@
             const data = { id: crypto.randomUUID(), tanggal: getToday(), tipe: sel === 'Lainnya' ? document.getElementById('mon-personel-lainnya').value : sel, jumlah: parseInt(document.getElementById('mon-personel-jumlah').value) };
             if(!data.tipe || !data.jumlah) return;
             
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan Personel...');
-                const req = await dbRequest(() => supabaseClient.from('personel').insert(data), 'personel');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
-            }
-            document.getElementById('mon-personel-jumlah').value=''; appData.personnel.push(data); renderPersonelList(); updateRekapitulasi();
+            showLoading(true, 'Menyimpan Personel...');
+            const req = await dbRequest(() => supabaseClient.from('personel').insert(data), 'personel');
+            showLoading(false);
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
+            
+            document.getElementById('mon-personel-jumlah').value=''; 
+            appData.personnel.push(data); 
+            renderPersonelList(); 
+            updateRekapitulasi();
         }
 
         async function updatePersonel(id, val) {
             const jml = parseInt(val)||0;
-            const p = appData.personnel.find(x=>x.id===id); if(p) p.jumlah = jml;
+            const p = appData.personnel.find(x=>x.id===id); 
+            if(p) p.jumlah = jml;
             updateRekapitulasi(); 
 
-            if(!USE_MOCK_DATA) {
-                const req = await dbRequest(() => supabaseClient.from('personel').update({jumlah:jml}).eq('id',id), 'personel');
-                if(req.error) return showToast('Gagal sinkron latar belakang', 'error');
-            }
+            const req = await dbRequest(() => supabaseClient.from('personel').update({jumlah:jml}).eq('id',id), 'personel');
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
         }
 
         function hapusPersonel(id) {
             showConfirmModal('Hapus personel?', async () => {
-                if(!USE_MOCK_DATA) {
-                    showLoading(true, 'Menghapus...');
-                    await dbRequest(() => supabaseClient.from('personel').delete().eq('id',id), 'personel');
-                    showLoading(false);
-                }
+                showLoading(true, 'Menghapus...');
+                await dbRequest(() => supabaseClient.from('personel').delete().eq('id',id), 'personel');
+                showLoading(false);
+                
                 appData.personnel = appData.personnel.filter(x=>x.id!==id);
                 renderPersonelList(); updateRekapitulasi(); showToast('Dihapus', 'success');
             });
@@ -1184,25 +1375,28 @@
             let trm = appData.sppg.reduce((s,x)=>s+(x.jumlah||0),0);
             let dis = appData.personnel.reduce((s,x)=>s+(x.jumlah||0),0);
             Object.values(appData.kehadiran[getToday()]||{}).forEach(k => dis+=(k.mbg||0));
-            document.getElementById('rekap-terima').textContent = trm;
-            document.getElementById('rekap-distribusi').textContent = dis;
-            document.getElementById('rekap-sisa').textContent = trm - dis;
             
-            document.getElementById('rekap-terima').style.color = '#a21caf';
-            document.getElementById('rekap-distribusi').style.color = '#b91c1c';
-            document.getElementById('rekap-sisa').style.color = (trm-dis)<0 ? '#b91c1c' : '#15803d';
+            const trmEl = document.getElementById('rekap-terima');
+            const disEl = document.getElementById('rekap-distribusi');
+            const sisaEl = document.getElementById('rekap-sisa');
+            
+            if (trmEl) trmEl.textContent = trm;
+            if (disEl) disEl.textContent = dis;
+            if (sisaEl) {
+                sisaEl.textContent = trm - dis;
+                sisaEl.style.color = (trm-dis)<0 ? '#b91c1c' : '#15803d';
+            }
         }
 
         /* ==================== PAGE: PETUGAS (SPPG) ==================== */
         function mulaiSimpanSPPG() {
-            const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
-            document.getElementById('sppg-waktu').value = d.toISOString().slice(0,16); // Auto-set Waktu
-            
             const w = document.getElementById('sppg-waktu').value;
             const p = document.getElementById('sppg-petugas').value;
             const j = parseInt(document.getElementById('sppg-jumlah').value);
             if(!p || !j) return showToast('Lengkapi Nama Kurir & Jml!', 'warning');
-            draftSppg = { id: crypto.randomUUID(), waktu: w, petugas: p, jumlah: j };
+            
+            // Simpan waktu ke database dalam format ISO lokal lengkap dengan offset timezone
+            draftSppg = { id: crypto.randomUUID(), waktu: toLocalISOString(w), petugas: p, jumlah: j };
             openModal('sppg-menu-modal');
         }
 
@@ -1237,14 +1431,14 @@
         }
 
         async function simpanSppgKeDatabase() {
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan Data...');
-                const req = await dbRequest(() => supabaseClient.from('sppg').insert(draftSppg), 'sppg');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
-            }
+            showLoading(true, 'Menyimpan Data...');
+            const req = await dbRequest(() => supabaseClient.from('sppg').insert(draftSppg), 'sppg');
+            showLoading(false);
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
+            
             closeModal('sppg-foto-modal');
-            document.getElementById('sppg-petugas').value=''; document.getElementById('sppg-jumlah').value='';
+            document.getElementById('sppg-petugas').value=''; 
+            document.getElementById('sppg-jumlah').value='';
             document.getElementById('sppg-foto-preview').style.display='none';
             appData.sppg.push(draftSppg); draftSppg={};
             renderSPPGList(); updateRekapitulasi(); showToast('SPPG Disimpan', 'success');
@@ -1254,7 +1448,7 @@
             const tbody = document.getElementById('sppg-riwayat-body');
             if(appData.sppg.length===0) return tbody.innerHTML = '<tr><td colspan="4" class="text-center">Kosong</td></tr>';
             tbody.innerHTML = appData.sppg.map(s => {
-                const w = new Date(s.waktu).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                const w = parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
                 const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`].filter(Boolean).join('<br>');
                 const f = s.foto ? `<br><a href="${s.foto}" target="_blank" style="font-size:0.75rem; color: var(--brand-purple);">📸 Lihat</a>` : '';
                 return `<tr><td>${w}</td><td><b>${s.jumlah}</b><br><small>${s.petugas}</small></td><td><span style="font-size:0.8rem">${m}${f}</span></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="bukaEditSPPG('${s.id}')">✏️</button></td></tr>`;
@@ -1264,8 +1458,12 @@
         function bukaEditSPPG(id) {
             const d = appData.sppg.find(x=>x.id===id); if(!d) return;
             document.getElementById('edit-sppg-id').value = d.id;
-            document.getElementById('edit-sppg-waktu').value = d.waktu ? new Date(d.waktu).toISOString().slice(0,16) : '';
-            document.getElementById('edit-sppg-petugas').value = d.petugas||''; document.getElementById('edit-sppg-jumlah').value = d.jumlah||'';
+            
+            // Konversi ISO string dari database kembali ke waktu lokal yang presisi untuk datetime-local
+            document.getElementById('edit-sppg-waktu').value = formatToDateTimeLocal(d.waktu);
+            
+            document.getElementById('edit-sppg-petugas').value = d.petugas||''; 
+            document.getElementById('edit-sppg-jumlah').value = d.jumlah||'';
             ['protein','karbo','sayur','buah','lainnya'].forEach(f => document.getElementById(`edit-sppg-${f}`).value = d[f]||'');
             const prev = document.getElementById('edit-sppg-foto-preview');
             if(d.foto) { prev.src = d.foto; prev.style.display='block'; } else prev.style.display='none';
@@ -1274,19 +1472,21 @@
 
         async function prosesEditSPPG() {
             const id = document.getElementById('edit-sppg-id').value;
+            const rawWaktu = document.getElementById('edit-sppg-waktu').value;
+            
             const up = {
-                waktu: document.getElementById('edit-sppg-waktu').value, petugas: document.getElementById('edit-sppg-petugas').value,
+                waktu: toLocalISOString(rawWaktu), 
+                petugas: document.getElementById('edit-sppg-petugas').value,
                 jumlah: parseInt(document.getElementById('edit-sppg-jumlah').value)
             };
             ['protein','karbo','sayur','buah','lainnya'].forEach(f => up[f] = document.getElementById(`edit-sppg-${f}`).value);
             if(editSppgFotoBase64) up.foto = editSppgFotoBase64;
 
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan...');
-                const req = await dbRequest(() => supabaseClient.from('sppg').update(up).eq('id', id), 'sppg');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
-            }
+            showLoading(true, 'Menyimpan...');
+            const req = await dbRequest(() => supabaseClient.from('sppg').update(up).eq('id', id), 'sppg');
+            showLoading(false);
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
+            
             const idx = appData.sppg.findIndex(x=>x.id===id); if(idx>-1) appData.sppg[idx] = {...appData.sppg[idx], ...up};
             closeModal('sppg-edit-modal'); renderSPPGList(); updateRekapitulasi(); showToast('Diperbarui', 'success');
         }
@@ -1297,12 +1497,11 @@
             if(!n && !c) return showToast('Isi nama/catatan', 'warning');
             
             const data = { id: crypto.randomUUID(), tanggal: getToday(), nama: n, catatan: c, foto: picFotoBase64 };
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan Laporan...');
-                const req = await dbRequest(() => supabaseClient.from('catatan_pic').insert(data), 'catatan_pic');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
-            }
+            
+            showLoading(true, 'Menyimpan Laporan...');
+            const req = await dbRequest(() => supabaseClient.from('catatan_pic').insert(data), 'catatan_pic');
+            showLoading(false);
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
             
             document.getElementById('pic-nama').value=''; document.getElementById('pic-catatan').value='';
             document.getElementById('pic-foto-preview').style.display='none'; document.getElementById('pic-foto-input').value=''; picFotoBase64=null;
@@ -1333,12 +1532,11 @@
             const up = { nama: document.getElementById('edit-pic-nama').value, catatan: document.getElementById('edit-pic-catatan').value };
             if(editPicFotoBase64) up.foto = editPicFotoBase64;
             
-            if(!USE_MOCK_DATA) {
-                showLoading(true, 'Menyimpan...');
-                const req = await dbRequest(() => supabaseClient.from('catatan_pic').update(up).eq('id', id), 'catatan_pic');
-                showLoading(false);
-                if(req.error) return showToast('Gagal sinkron', 'error');
-            }
+            showLoading(true, 'Menyimpan...');
+            const req = await dbRequest(() => supabaseClient.from('catatan_pic').update(up).eq('id', id), 'catatan_pic');
+            showLoading(false);
+            if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
+            
             const idx = appData.catatan_pic.findIndex(x=>x.id===id); if(idx>-1) appData.catatan_pic[idx] = {...appData.catatan_pic[idx], ...up};
             closeModal('pic-edit-modal'); renderCatatanPICList(); showToast('Diperbarui', 'success');
         }
@@ -1347,7 +1545,7 @@
         function handleCSVUpload(event, type) {
             const file = event.target.files[0]; if(!file) return;
             const r = new FileReader();
-            r.onload = e => {
+            r.onload = async e => {
                 const lines = e.target.result.split(/\r?\n/); let nd = [];
                 lines.forEach((l, i) => {
                     if(!l.trim() || (i===0 && l.toLowerCase().includes('nama'))) return;
@@ -1361,8 +1559,10 @@
                 selectedAdminItems[type].clear();
                 renderAdminTable(type); 
                 updateBulkActionUI(type);
-                showToast('CSV dimuat. Klik Simpan Data.', 'success'); 
                 event.target.value='';
+                
+                // AUTO-SAVE: Sinkronisasi instan ke database setelah unggah CSV sukses
+                await simpanMasterDataKeDB(false);
             }; r.readAsText(file);
         }
 
@@ -1373,8 +1573,11 @@
             const btns = document.querySelectorAll('#page-admin .tab-pill');
             for(let i=0; i<btns.length; i++) { btns[i].classList.remove('active'); }
 
-            document.getElementById(`tab-${tabId}`).style.display = 'block';
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+                targetTab.classList.add('active');
+            }
             if(btnElement) btnElement.classList.add('active');
 
             renderAdminTable(tabId);
@@ -1390,6 +1593,7 @@
             updateBulkActionUI(type);
         }
 
+        // Checklist All Checkboxes
         function toggleAll(event, type) {
             const isChecked = event.target.checked;
             const checkboxes = document.querySelectorAll(`.cb-${type}`);
@@ -1433,7 +1637,6 @@
             if (count === 0) return;
             
             showConfirmModal(`Yakin menghapus ${count} data terpilih?`, async () => {
-                // Sort descending to safely splice from array
                 const indices = Array.from(selectedAdminItems[type]).sort((a, b) => b - a);
                 indices.forEach(idx => {
                     appData[type].splice(idx, 1);
@@ -1492,7 +1695,7 @@
         function hapusAdminItem(t, i) {
             showConfirmModal('Yakin hapus data ini?', async () => { 
                 appData[t].splice(i,1); 
-                selectedAdminItems[t].clear(); // Reset selection to avoid shifted index issues
+                selectedAdminItems[t].clear(); 
                 renderAdminTable(t); 
                 await simpanMasterDataKeDB(true); 
                 showToast('Dihapus', 'success'); 
@@ -1522,39 +1725,57 @@
             }; 
             if(!d.nama) return; 
             if(i>=0) appData.kelas[i]=d; else appData.kelas.push(d); 
-            resetForm('kelas'); selectedAdminItems['kelas'].clear(); renderAdminTable('kelas'); simpanMasterDataKeDB(true); 
+            resetForm('kelas'); selectedAdminItems['kelas'].clear(); renderAdminTable('kelas'); simpanMasterDataKeDB(false); 
         }
-        function simpanFormGuru() { const i=parseInt(document.getElementById('form-guru-index').value); const n=document.getElementById('form-guru-nama').value.trim(); if(!n) return; if(i>=0) appData.guru[i]=n; else appData.guru.push(n); resetForm('guru'); selectedAdminItems['guru'].clear(); renderAdminTable('guru'); simpanMasterDataKeDB(true); }
-        function simpanFormMurid() { const i=parseInt(document.getElementById('form-murid-index').value); const d={nama:document.getElementById('form-murid-nama').value.trim(), kelas:document.getElementById('form-murid-kelas').value.trim()}; if(!d.nama||!d.kelas) return; if(i>=0) appData.murid[i]=d; else appData.murid.push(d); resetForm('murid'); selectedAdminItems['murid'].clear(); renderAdminTable('murid'); simpanMasterDataKeDB(true); }
-        function simpanFormPetugas() { const i=parseInt(document.getElementById('form-petugas-index').value); const d={nama:document.getElementById('form-petugas-nama').value.trim(), tugas:document.getElementById('form-petugas-tugas').value.trim(), hari:document.getElementById('form-petugas-hari').value}; if(!d.nama||!d.tugas) return; if(i>=0) appData.petugas[i]=d; else appData.petugas.push(d); resetForm('petugas'); selectedAdminItems['petugas'].clear(); renderAdminTable('petugas'); simpanMasterDataKeDB(true); }
+        function simpanFormGuru() { const i=parseInt(document.getElementById('form-guru-index').value); const n=document.getElementById('form-guru-nama').value.trim(); if(!n) return; if(i>=0) appData.guru[i]=n; else appData.guru.push(n); resetForm('guru'); selectedAdminItems['guru'].clear(); renderAdminTable('guru'); simpanMasterDataKeDB(false); }
+        function simpanFormMurid() { const i=parseInt(document.getElementById('form-murid-index').value); const d={nama:document.getElementById('form-murid-nama').value.trim(), kelas:document.getElementById('form-murid-kelas').value.trim()}; if(!d.nama||!d.kelas) return; if(i>=0) appData.murid[i]=d; else appData.murid.push(d); resetForm('murid'); selectedAdminItems['murid'].clear(); renderAdminTable('murid'); simpanMasterDataKeDB(false); }
+        function simpanFormPetugas() { const i=parseInt(document.getElementById('form-petugas-index').value); const d={nama:document.getElementById('form-petugas-nama').value.trim(), tugas:document.getElementById('form-petugas-tugas').value.trim(), hari:document.getElementById('form-petugas-hari').value}; if(!d.nama||!d.tugas) return; if(i>=0) appData.petugas[i]=d; else appData.petugas.push(d); resetForm('petugas'); selectedAdminItems['petugas'].clear(); renderAdminTable('petugas'); simpanMasterDataKeDB(false); }
 
         async function simpanMasterDataKeDB(silent = false) {
-            if(!USE_MOCK_DATA) {
-                if(!silent) showLoading(true, 'Menyimpan Master Data...');
-                const req = await dbRequest(() => supabaseClient.from('app_settings').upsert({id:1, kelas:appData.kelas, guru:appData.guru, murid:appData.murid, petugas:appData.petugas}, {onConflict:'id'}), 'app_settings');
-                if(!silent) showLoading(false);
-                if(req.error && !silent) return showToast('Gagal Simpan ke Cloud', 'error');
-            }
+            if(!silent) showLoading(true, 'Menyimpan Master Data...');
+            const req = await dbRequest(() => supabaseClient.from('app_settings').upsert({id:1, kelas:appData.kelas, guru:appData.guru, murid:appData.murid, petugas:appData.petugas}, {onConflict:'id'}), 'app_settings');
+            if(!silent) showLoading(false);
+            if(req.error && !silent) return showToast('Gagal Simpan ke Cloud', 'error');
+            
             if(!silent) showToast('Master Data Disimpan', 'success');
         }
 
         async function hapusDataByDate() {
             const dt = document.getElementById('hapus-tanggal').value; if(!dt) return showToast('Pilih tanggal!', 'warning');
             showConfirmModal(`PERINGATAN! Hapus permanen SEMUA histori transaksi pada tanggal ${dt}?`, async () => {
-                if(!USE_MOCK_DATA) {
-                    showLoading(true, 'Menghapus Data...');
-                    await dbRequest(() => supabaseClient.from('kehadiran').delete().eq('tanggal', dt), 'kehadiran');
-                    await dbRequest(() => supabaseClient.from('personel').delete().eq('tanggal', dt), 'personel');
-                    await dbRequest(() => supabaseClient.from('sppg').delete().gte('waktu', dt+' 00:00:00').lte('waktu', dt+' 23:59:59'), 'sppg');
-                    await dbRequest(() => supabaseClient.from('catatan_pic').delete().eq('tanggal', dt), 'catatan_pic');
-                    showLoading(false); 
-                } else {
-                    appData.kehadiran[dt] = {};
-                    appData.personnel = appData.personnel.filter(p => p.tanggal !== dt);
-                    appData.sppg = appData.sppg.filter(s => !s.waktu.startsWith(dt));
-                    appData.catatan_pic = appData.catatan_pic.filter(c => c.tanggal !== dt);
-                }
+                showLoading(true, 'Menghapus Data...');
+                await dbRequest(() => supabaseClient.from('kehadiran').delete().eq('tanggal', dt), 'kehadiran');
+                await dbRequest(() => supabaseClient.from('personel').delete().eq('tanggal', dt), 'personel');
+                await dbRequest(() => supabaseClient.from('sppg').delete().gte('waktu', dt+' 00:00:00').lte('waktu', dt+' 23:59:59'), 'sppg');
+                await dbRequest(() => supabaseClient.from('catatan_pic').delete().eq('tanggal', dt), 'catatan_pic');
+                showLoading(false); 
+                
                 showToast('Data dihapus!', 'success'); if(dt === getToday()) window.location.reload();
+            });
+        }
+
+        async function hapusSemuaDataRiwayat() {
+            showConfirmModal('PERINGATAN KERAS! Tindakan ini akan menghapus PERMANEN seluruh data riwayat (Kehadiran, Personel, SPPG, dan Catatan PIC) dari awal hingga hari ini. Apakah Anda yakin?', () => {
+                showConfirmModal('Konfirmasi Tahap Akhir: Seluruh data riwayat di cloud database akan dihapus selamanya dan tidak dapat dipulihkan kembali. Apakah Anda benar-benar yakin?', async () => {
+                    showLoading(true, 'Menghapus Seluruh Riwayat...');
+                    
+                    // Menghapus seluruh baris di masing-masing tabel transaksi/riwayat secara paralel
+                    const [reqK, reqP, reqS, reqC] = await Promise.all([
+                        dbRequest(() => supabaseClient.from('kehadiran').delete().not('tanggal', 'is', null), 'kehadiran'),
+                        dbRequest(() => supabaseClient.from('personel').delete().not('id', 'is', null), 'personel'),
+                        dbRequest(() => supabaseClient.from('sppg').delete().not('id', 'is', null), 'sppg'),
+                        dbRequest(() => supabaseClient.from('catatan_pic').delete().not('id', 'is', null), 'catatan_pic')
+                    ]);
+                    
+                    showLoading(false);
+                    
+                    if (reqK.error || reqP.error || reqS.error || reqC.error) {
+                        showToast('Gagal menghapus beberapa riwayat di cloud server.', 'error');
+                    } else {
+                        showToast('Seluruh riwayat berhasil direset permanen!', 'success');
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                });
             });
         }
 
@@ -1565,13 +1786,18 @@
                 const tg = document.getElementById('report-date').value;
                 let sppgData=[], perData=[], kehData=[], catData=[];
 
-                if(!USE_MOCK_DATA) {
-                    const reqS = await dbRequest(() => supabaseClient.from('sppg').select('*').gte('waktu', tg+' 00:00:00').lte('waktu', tg+' 23:59:59'));
-                    const reqP = await dbRequest(() => supabaseClient.from('personel').select('*').eq('tanggal', tg));
-                    const reqK = await dbRequest(() => supabaseClient.from('kehadiran').select('*').eq('tanggal', tg));
-                    const reqC = await dbRequest(() => supabaseClient.from('catatan_pic').select('*').eq('tanggal', tg));
-                    sppgData = reqS.data||[]; perData = reqP.data||[]; kehData = reqK.data||[]; catData = reqC.data||[];
-                } else { sppgData=appData.sppg; perData=appData.personnel; kehData=Object.values(appData.kehadiran[tg]||{}); catData=appData.catatan_pic; }
+                // CRITICAL TIMEZONE FIX: Format filter pencarian PDF menggunakan batas waktu lokal yang aman (offset-aware ISO)
+                const startISO = toLocalISOString(tg + 'T00:00');
+                const endISO = toLocalISOString(tg + 'T23:59');
+
+                const [reqS, reqP, reqK, reqC] = await Promise.all([
+                    dbRequest(() => supabaseClient.from('sppg').select('*').gte('waktu', startISO).lte('waktu', endISO), 'sppg'),
+                    dbRequest(() => supabaseClient.from('personel').select('*').eq('tanggal', tg), 'personel'),
+                    dbRequest(() => supabaseClient.from('kehadiran').select('*').eq('tanggal', tg), 'kehadiran'),
+                    dbRequest(() => supabaseClient.from('catatan_pic').select('*').eq('tanggal', tg), 'catatan_pic')
+                ]);
+
+                sppgData = reqS.data||[]; perData = reqP.data||[]; kehData = reqK.data||[]; catData = reqC.data||[];
 
                 let tTrm = sppgData.reduce((s, x) => s+(x.jumlah||0), 0);
                 let tDis = perData.reduce((s, x) => s+(x.jumlah||0), 0);
@@ -1606,7 +1832,7 @@
                 
                 doc.autoTable({
                     startY: 63, head: [['Wkt', 'Kurir', 'Jml', 'Menu']], 
-                    body: sppgData.map(s => [new Date(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), s.petugas, s.jumlah, `Pro: ${s.protein||'-'}\nKarbo: ${s.karbo||'-'}\nSyr: ${s.sayur||'-'}`]), 
+                    body: sppgData.map(s => [parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), s.petugas, s.jumlah, `Pro: ${s.protein||'-'}\nKarbo: ${s.karbo||'-'}\nSyr: ${s.sayur||'-'}`]), 
                     theme: 'grid', headStyles: { fillColor:[120,82,169] }, styles: { fontSize:8 }, margin: { left:14, right:155 }
                 });
 
@@ -1651,7 +1877,7 @@
                 
                 let sH = appData.sppg.map(s => {
                     const img = s.foto ? `<img src="${s.foto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">` : '-';
-                    return `<tr><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${new Date(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${s.petugas}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;color:#7852a9;"><b>${s.jumlah}</b></td><td style="border-bottom:1px solid #e2e8f0;padding:12px;text-align:center;">${img}</td></tr>`;
+                    return `<tr><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${s.petugas}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;color:#7852a9;"><b>${s.jumlah}</b></td><td style="border-bottom:1px solid #e2e8f0;padding:12px;text-align:center;">${img}</td></tr>`;
                 }).join('');
 
                 let pH = appData.catatan_pic.map(c => `
