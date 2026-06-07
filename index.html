@@ -998,7 +998,12 @@
             if(element) element.classList.add('active');
             document.getElementById(`sub-${subId}`).classList.add('active');
 
-            if(subId === 'sppg') renderSPPGList();
+            if(subId === 'sppg') {
+                const d = new Date(); 
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                document.getElementById('sppg-waktu').value = d.toISOString().slice(0,16);
+                renderSPPGList();
+            }
             if(subId === 'laporan') renderCatatanPICList();
         }
 
