@@ -114,7 +114,7 @@
         /* Top Tabs (Pills) */
         .top-tabs { 
             display: flex; background: rgba(120, 82, 169, 0.08); border-radius: 16px; padding: 6px; margin-bottom: 24px; 
-            overflow-x: auto; scrollbar-width: none;
+            overflow-x: auto; scrollbar-width: none; gap: 4px;
         }
         .top-tabs::-webkit-scrollbar { display: none; }
         .tab-pill { 
@@ -143,6 +143,9 @@
         select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237852a9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1.2rem center; background-size: 1.2em; padding-right: 3rem; }
         select:invalid, select option[value=""] { color: #94a3b8; }
         
+        /* Modern Checkbox */
+        input[type="checkbox"] { width: 1.15rem; height: 1.15rem; accent-color: var(--brand-purple); cursor: pointer; border-radius: 4px; }
+        
         .btn { 
             width: 100%; padding: 16px 20px; background-color: var(--brand-orange); color: var(--white); 
             border: none; border-radius: 14px; cursor: pointer; font-weight: 700; font-size: 1rem; 
@@ -153,7 +156,7 @@
         .btn:active { transform: scale(0.97); box-shadow: 0 2px 5px rgba(255, 107, 0, 0.2); }
         .btn:disabled { background-color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
         
-        .btn-sm { padding: 10px 14px; font-size: 0.85rem; border-radius: 10px; width: auto; }
+        .btn-sm { padding: 10px 14px; font-size: 0.85rem; border-radius: 10px; width: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .btn-danger { background-color: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
         .btn-danger:hover { background-color: #dc2626; box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4); }
         .btn-outline { background-color: transparent; border: 2px solid var(--border); color: var(--text-main); box-shadow: none; }
@@ -231,20 +234,14 @@
 
         .admin-form-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
 
-        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; border-bottom: 2px solid var(--border); }
-        .tab-btn { padding: 12px 24px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all 0.2s; white-space: nowrap; font-size: 1rem; }
-        .tab-btn:hover { color: var(--brand-purple); }
-        .tab-btn.active { color: var(--brand-purple); border-bottom-color: var(--brand-purple); }
-
         .tab-content { display: none; animation: tabFadeIn 0.3s ease; padding-top: 5px; }
         .tab-content.active { display: block; }
         @keyframes tabFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        .hidden { display: none !important; }
+
         @media (max-width: 768px) {
             .main-content { padding: 85px 15px 85px 15px; }
-            .admin-tabs { border-bottom: none; gap: 8px; padding-bottom: 10px;}
-            .tab-btn { background: rgba(120, 82, 169, 0.05); border-radius: 12px; padding: 10px 18px; font-size: 0.9rem; border: none;}
-            .tab-btn.active { background: var(--brand-purple); color: white; }
         }
     </style>
 </head>
@@ -354,7 +351,7 @@
                     <h3>☀️ Distribusi (Shift Pagi)</h3>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Kelas</th><th class="text-center">Jml</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
+                            <thead><tr><th>Kelas</th><th class="text-center">Hadir</th><th>Petugas murid</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
                             <tbody id="mon-body-pagi"></tbody>
                         </table>
                     </div>
@@ -364,7 +361,7 @@
                     <h3>🌤️ Distribusi (Shift Siang)</h3>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Kelas</th><th class="text-center">Jml</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
+                            <thead><tr><th>Kelas</th><th class="text-center">Hadir</th><th>Petugas murid</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
                             <tbody id="mon-body-siang"></tbody>
                         </table>
                     </div>
@@ -487,26 +484,33 @@
             <div class="card" style="padding-top: 20px;">
                 <h2 style="margin-bottom: 20px;">Master Data</h2>
                 
-                <div class="admin-tabs">
-                    <button class="tab-btn active" onclick="openAdminTab('kelas', this)">Kelas</button>
-                    <button class="tab-btn" onclick="openAdminTab('guru', this)">Guru</button>
-                    <button class="tab-btn" onclick="openAdminTab('murid', this)">Murid</button>
-                    <button class="tab-btn" onclick="openAdminTab('petugas', this)">Petugas</button>
+                <div class="top-tabs">
+                    <div class="tab-pill active" onclick="openAdminTab('kelas', this)">Kelas</div>
+                    <div class="tab-pill" onclick="openAdminTab('guru', this)">Guru</div>
+                    <div class="tab-pill" onclick="openAdminTab('murid', this)">Murid</div>
+                    <div class="tab-pill" onclick="openAdminTab('petugas', this)">Petugas</div>
                 </div>
 
                 <!-- Tab Kelas -->
                 <div id="tab-kelas" class="tab-content active">
                     <input type="file" id="csv-kelas" accept=".csv" style="display: none;" onchange="handleCSVUpload(event, 'kelas')">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                        <span style="font-size:0.9rem; font-weight: 600; color:var(--brand-purple);">Daftar Kelas</span>
-                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-kelas').click()">📂 Impor CSV</button>
+                        <span style="font-size:0.9rem; font-weight: 600; color:var(--brand-purple);">Daftar Kelas (Format CSV: Nama, Shift, Jml Siswa, Wali)</span>
+                        <div>
+                            <button id="btn-bulk-kelas" class="btn btn-sm btn-danger hidden" onclick="deleteSelected('kelas')" style="margin-right: 10px;">🗑️ Hapus (0)</button>
+                            <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-kelas').click()">📂 Impor CSV</button>
+                        </div>
                     </div>
                     <div class="admin-form-box">
                         <input type="hidden" id="form-kelas-index" value="-1">
-                        <input type="text" id="form-kelas-nama" class="form-control mb-2" style="margin-bottom: 12px;" placeholder="Nama Kelas" onkeydown="if(event.key==='Enter') simpanFormKelas()">
-                        <select id="form-kelas-shift" class="form-control mb-2" style="margin-bottom: 15px;">
-                            <option value="Pagi">Pagi</option><option value="Siang">Siang</option>
-                        </select>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="form-kelas-nama" class="form-control" placeholder="Nama Kelas" onkeydown="if(event.key==='Enter') simpanFormKelas()">
+                            <select id="form-kelas-shift" class="form-control">
+                                <option value="Pagi">Pagi</option><option value="Siang">Siang</option>
+                            </select>
+                            <input type="number" id="form-kelas-jumlah" class="form-control" placeholder="Jumlah Siswa" onkeydown="if(event.key==='Enter') simpanFormKelas()">
+                            <input type="text" id="form-kelas-wali" class="form-control" placeholder="Wali Kelas" onkeydown="if(event.key==='Enter') simpanFormKelas()">
+                        </div>
                         <div style="display:flex; gap:10px;">
                             <button class="btn btn-sm" id="btn-simpan-kelas" style="flex:1;" onclick="simpanFormKelas()">Tambah</button>
                             <button class="btn btn-outline btn-sm" style="flex:1;" onclick="resetForm('kelas')">Batal</button>
@@ -514,7 +518,7 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>No</th><th>Kelas</th><th>Shift</th><th class="text-center">Aksi</th></tr></thead>
+                            <thead><tr><th width="40"><input type="checkbox" id="cb-all-kelas" onchange="toggleAll(event, 'kelas')"></th><th>No</th><th>Kelas</th><th>Shift</th><th class="text-center">Jml Siswa</th><th>Wali Kelas</th><th class="text-center">Aksi</th></tr></thead>
                             <tbody id="admin-tbody-kelas"></tbody>
                         </table>
                     </div>
@@ -526,7 +530,10 @@
                     <input type="file" id="csv-guru" accept=".csv" style="display: none;" onchange="handleCSVUpload(event, 'guru')">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                         <span style="font-size:0.9rem; font-weight: 600; color:var(--brand-purple);">Daftar Guru</span>
-                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-guru').click()">📂 Impor CSV</button>
+                        <div>
+                            <button id="btn-bulk-guru" class="btn btn-sm btn-danger hidden" onclick="deleteSelected('guru')" style="margin-right: 10px;">🗑️ Hapus (0)</button>
+                            <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-guru').click()">📂 Impor CSV</button>
+                        </div>
                     </div>
                     <div class="admin-form-box">
                         <input type="hidden" id="form-guru-index" value="-1">
@@ -538,7 +545,7 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>No</th><th>Nama Guru</th><th class="text-center">Aksi</th></tr></thead>
+                            <thead><tr><th width="40"><input type="checkbox" id="cb-all-guru" onchange="toggleAll(event, 'guru')"></th><th>No</th><th>Nama Guru</th><th class="text-center">Aksi</th></tr></thead>
                             <tbody id="admin-tbody-guru"></tbody>
                         </table>
                     </div>
@@ -550,7 +557,10 @@
                     <input type="file" id="csv-murid" accept=".csv" style="display: none;" onchange="handleCSVUpload(event, 'murid')">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                         <span style="font-size:0.9rem; font-weight: 600; color:var(--brand-purple);">Daftar Siswa</span>
-                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-murid').click()">📂 Impor CSV</button>
+                        <div>
+                            <button id="btn-bulk-murid" class="btn btn-sm btn-danger hidden" onclick="deleteSelected('murid')" style="margin-right: 10px;">🗑️ Hapus (0)</button>
+                            <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-murid').click()">📂 Impor CSV</button>
+                        </div>
                     </div>
                     <div class="admin-form-box">
                         <input type="hidden" id="form-murid-index" value="-1">
@@ -563,7 +573,7 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>No</th><th>Nama</th><th>Kelas</th><th class="text-center">Aksi</th></tr></thead>
+                            <thead><tr><th width="40"><input type="checkbox" id="cb-all-murid" onchange="toggleAll(event, 'murid')"></th><th>No</th><th>Nama</th><th>Kelas</th><th class="text-center">Aksi</th></tr></thead>
                             <tbody id="admin-tbody-murid"></tbody>
                         </table>
                     </div>
@@ -575,7 +585,10 @@
                     <input type="file" id="csv-petugas" accept=".csv" style="display: none;" onchange="handleCSVUpload(event, 'petugas')">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                         <span style="font-size:0.9rem; font-weight: 600; color:var(--brand-purple);">Jadwal Piket</span>
-                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-petugas').click()">📂 Impor CSV</button>
+                        <div>
+                            <button id="btn-bulk-petugas" class="btn btn-sm btn-danger hidden" onclick="deleteSelected('petugas')" style="margin-right: 10px;">🗑️ Hapus (0)</button>
+                            <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-petugas').click()">📂 Impor CSV</button>
+                        </div>
                     </div>
                     <div class="admin-form-box">
                         <input type="hidden" id="form-petugas-index" value="-1">
@@ -593,7 +606,7 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>No</th><th>Nama</th><th>Tugas</th><th>Hari</th><th class="text-center">Aksi</th></tr></thead>
+                            <thead><tr><th width="40"><input type="checkbox" id="cb-all-petugas" onchange="toggleAll(event, 'petugas')"></th><th>No</th><th>Nama</th><th>Tugas</th><th>Hari</th><th class="text-center">Aksi</th></tr></thead>
                             <tbody id="admin-tbody-petugas"></tbody>
                         </table>
                     </div>
@@ -604,7 +617,7 @@
         </section>
     </main>
 
-    <!-- Bottom Navigation Bar (Tanpa Kehadiran) -->
+    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <div class="nav-item" id="btn-nav-petugas" onclick="attemptNavigate('petugas', 'mbg1234')">
             <div class="icon">🧑‍💼</div>
@@ -747,14 +760,16 @@
         /* ================================================================================== */
         /* CONFIGURATION: MODE MOCK DATA (Ganti ke false jika database cloud siap digunakan)  */
         /* ================================================================================== */
-        const USE_MOCK_DATA = true; 
+        const USE_MOCK_DATA = false; 
 
         const MOCK_DATA = {
             app_settings: {
                 id: 1,
                 kelas: [
-                    { nama: "X RPL 1", shift: "Pagi" }, { nama: "X RPL 2", shift: "Pagi" },
-                    { nama: "XI TKJ 1", shift: "Siang" }, { nama: "XI TKJ 2", shift: "Siang" }
+                    { nama: "X RPL 1", shift: "Pagi", jumlah: 36, wali: "Susi Susanti, S.Pd." },
+                    { nama: "X RPL 2", shift: "Pagi", jumlah: 35, wali: "Andi Darmawan, M.Kom." },
+                    { nama: "XI TKJ 1", shift: "Siang", jumlah: 32, wali: "Rina Maharani, S.T." },
+                    { nama: "XI TKJ 2", shift: "Siang", jumlah: 34, wali: "Tono Saputra, S.Pd." }
                 ],
                 guru: ["Ahmad Subarjo, S.Pd.", "Budi Setiawan, M.Pd.", "Citra Lestari, S.Kom."],
                 murid: [
@@ -783,7 +798,9 @@
         let picFotoBase64 = null;
         let editPicFotoBase64 = null;
 
+        // Admin Pagination & Selection State
         let adminPage = { kelas: 1, guru: 1, murid: 1, petugas: 1 };
+        let selectedAdminItems = { kelas: new Set(), guru: new Set(), murid: new Set(), petugas: new Set() };
         const ADMIN_PER_PAGE = 10;
 
         function showLoading(show, customText) { 
@@ -1085,17 +1102,19 @@
                 if (!kData) return;
                 const sid = kls.nama.replace(/\s+/g, '-');
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
-                const totM = appData.murid.filter(m => m.kelas === kls.nama).length;
+                const totM = kls.jumlah || 0; // Menggunakan jumlah siswa dari master data kelas
                 
                 const row = `<tr>
-                    <td><b>${kls.nama}</b><br><small class="text-muted">Hadir: ${kData.hadir}/${totM}</small></td>
+                    <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
+                    <td class="text-center" style="vertical-align:middle; font-weight:800; color:var(--brand-purple); font-size:1.1rem;">${kData.hadir}</td>
+                    <td><b>${kData.petugas}</b><br><small class="text-muted">${kData.guru}</small></td>
                     <td class="text-center" style="vertical-align:middle;"><input type="number" id="mbg_${sid}" class="table-inline-input" value="${mbg}" placeholder="${kData.hadir}" onchange="updateMbgTray('${kls.nama}', 'mbg', this.value)"></td>
                     <td class="text-center" style="vertical-align:middle;"><input type="number" id="tray_${sid}" class="table-inline-input" value="${tray}" placeholder="${mbg!==''?mbg:'-'}" ${mbg===''?'disabled':''} onchange="updateMbgTray('${kls.nama}', 'tray', this.value)"></td>
                 </tr>`;
                 kls.shift === 'Pagi' ? htmlPagi += row : htmlSiang += row;
             });
-            document.getElementById('mon-body-pagi').innerHTML = htmlPagi || '<tr><td colspan="3" class="text-center text-muted">Data kosong</td></tr>';
-            document.getElementById('mon-body-siang').innerHTML = htmlSiang || '<tr><td colspan="3" class="text-center text-muted">Data kosong</td></tr>';
+            document.getElementById('mon-body-pagi').innerHTML = htmlPagi || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
+            document.getElementById('mon-body-siang').innerHTML = htmlSiang || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
         }
 
         async function updateMbgTray(kls, type, val) {
@@ -1124,7 +1143,9 @@
             if(!data.tipe || !data.jumlah) return;
             
             if(!USE_MOCK_DATA) {
+                showLoading(true, 'Menyimpan Personel...');
                 const req = await dbRequest(() => supabaseClient.from('personel').insert(data), 'personel');
+                showLoading(false);
                 if(req.error) return showToast('Gagal sinkron ke Cloud', 'error');
             }
             document.getElementById('mon-personel-jumlah').value=''; appData.personnel.push(data); renderPersonelList(); updateRekapitulasi();
@@ -1331,12 +1352,17 @@
                 lines.forEach((l, i) => {
                     if(!l.trim() || (i===0 && l.toLowerCase().includes('nama'))) return;
                     const p = l.replace(/"/g, '').trim().replace(/;/g, ',').split(',');
-                    if(type==='kelas' && p.length>=2) nd.push({nama:p[0].trim(), shift:p[1].trim()});
+                    if(type==='kelas' && p.length>=2) nd.push({nama:p[0].trim(), shift:p[1].trim(), jumlah: p[2] ? parseInt(p[2].trim()) : 0, wali: p[3] ? p[3].trim() : ''});
                     if(type==='guru') nd.push(l.trim());
                     if(type==='murid' && p.length>=2) nd.push({nama:p[0].trim(), kelas:p[1].trim()});
                     if(type==='petugas' && p.length>=3) nd.push({nama:p[0].trim(), tugas:p[1].trim(), hari:p[2].trim()});
                 });
-                appData[type] = nd; renderAdminTable(type); showToast('CSV dimuat. Klik Simpan Data.', 'success'); event.target.value='';
+                appData[type] = nd; 
+                selectedAdminItems[type].clear();
+                renderAdminTable(type); 
+                updateBulkActionUI(type);
+                showToast('CSV dimuat. Klik Simpan Data.', 'success'); 
+                event.target.value='';
             }; r.readAsText(file);
         }
 
@@ -1354,6 +1380,72 @@
             renderAdminTable(tabId);
         }
 
+        /* Checkbox Selection Functions */
+        function toggleSelection(type, index) {
+            if (selectedAdminItems[type].has(index)) {
+                selectedAdminItems[type].delete(index);
+            } else {
+                selectedAdminItems[type].add(index);
+            }
+            updateBulkActionUI(type);
+        }
+
+        function toggleAll(event, type) {
+            const isChecked = event.target.checked;
+            const checkboxes = document.querySelectorAll(`.cb-${type}`);
+            checkboxes.forEach(cb => {
+                const idx = parseInt(cb.value);
+                cb.checked = isChecked;
+                if (isChecked) {
+                    selectedAdminItems[type].add(idx);
+                } else {
+                    selectedAdminItems[type].delete(idx);
+                }
+            });
+            updateBulkActionUI(type);
+        }
+
+        function updateBulkActionUI(type) {
+            const btn = document.getElementById(`btn-bulk-${type}`);
+            if (btn) {
+                if (selectedAdminItems[type].size > 0) {
+                    btn.classList.remove('hidden');
+                    btn.textContent = `🗑️ Hapus (${selectedAdminItems[type].size})`;
+                } else {
+                    btn.classList.add('hidden');
+                }
+            }
+
+            // Sync master checkbox state based on visible checkboxes
+            const allVisible = document.querySelectorAll(`.cb-${type}`);
+            const masterCb = document.getElementById(`cb-all-${type}`);
+            if (allVisible.length > 0 && masterCb) {
+                let allChecked = true;
+                allVisible.forEach(cb => { if (!cb.checked) allChecked = false; });
+                masterCb.checked = allChecked;
+            } else if (masterCb) {
+                masterCb.checked = false;
+            }
+        }
+
+        function deleteSelected(type) {
+            const count = selectedAdminItems[type].size;
+            if (count === 0) return;
+            
+            showConfirmModal(`Yakin menghapus ${count} data terpilih?`, async () => {
+                // Sort descending to safely splice from array
+                const indices = Array.from(selectedAdminItems[type]).sort((a, b) => b - a);
+                indices.forEach(idx => {
+                    appData[type].splice(idx, 1);
+                });
+                selectedAdminItems[type].clear();
+                renderAdminTable(type);
+                updateBulkActionUI(type);
+                await simpanMasterDataKeDB(true);
+                showToast(`${count} Data terpilih dihapus`, 'success');
+            });
+        }
+
         function renderAdminTable(type) {
             const d = appData[type] || []; const tb = document.getElementById(`admin-tbody-${type}`); if(!tb) return;
             const tp = Math.ceil(d.length / ADMIN_PER_PAGE) || 1;
@@ -1361,14 +1453,17 @@
             
             const st = (adminPage[type]-1) * ADMIN_PER_PAGE; const cd = d.slice(st, st+ADMIN_PER_PAGE);
             
-            if(cd.length===0) tb.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Kosong</td></tr>`;
+            if(cd.length===0) tb.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Kosong</td></tr>`;
             else tb.innerHTML = cd.map((item, idx) => {
                 const i = st+idx; let c='';
-                if(type==='kelas') c=`<td><b>${item.nama}</b></td><td>${item.shift}</td>`;
+                const isChecked = selectedAdminItems[type].has(i) ? 'checked' : '';
+                const cb = `<td width="40"><input type="checkbox" class="cb-${type}" value="${i}" ${isChecked} onchange="toggleSelection('${type}', ${i})"></td>`;
+                
+                if(type==='kelas') c=`<td><b>${item.nama}</b></td><td>${item.shift}</td><td class="text-center">${item.jumlah || 0}</td><td>${item.wali || '-'}</td>`;
                 if(type==='guru') c=`<td><b>${item}</b></td>`;
                 if(type==='murid') c=`<td><b>${item.nama}</b></td><td>${item.kelas}</td>`;
                 if(type==='petugas') c=`<td><b>${item.nama}</b></td><td>${item.tugas}</td><td style="color:var(--brand-purple);">${item.hari}</td>`;
-                return `<tr><td>${i+1}</td>${c}<td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="editAdminItem('${type}', ${i})">✏️</button> <button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusAdminItem('${type}', ${i})">🗑️</button></td></tr>`;
+                return `<tr>${cb}<td>${i+1}</td>${c}<td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="editAdminItem('${type}', ${i})">✏️</button> <button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusAdminItem('${type}', ${i})">🗑️</button></td></tr>`;
             }).join('');
             
             document.getElementById(`admin-page-${type}`).innerHTML = `
@@ -1376,12 +1471,18 @@
                 <span style="font-size:0.8rem; font-weight:bold;">Hal. ${adminPage[type]}/${tp}</span>
                 <button class="btn btn-sm btn-outline" style="flex:1;" onclick="adminPage.${type}++; renderAdminTable('${type}')" ${adminPage[type]===tp?'disabled':''}>Next</button>
             `;
+            updateBulkActionUI(type);
         }
         function renderAllAdminTables() { renderAdminTable('kelas'); renderAdminTable('guru'); renderAdminTable('murid'); renderAdminTable('petugas'); }
 
         function editAdminItem(t, i) {
             const it = appData[t][i]; document.getElementById(`form-${t}-index`).value = i;
-            if(t==='kelas') { document.getElementById('form-kelas-nama').value=it.nama; document.getElementById('form-kelas-shift').value=it.shift; }
+            if(t==='kelas') { 
+                document.getElementById('form-kelas-nama').value=it.nama; 
+                document.getElementById('form-kelas-shift').value=it.shift; 
+                document.getElementById('form-kelas-jumlah').value=it.jumlah || '';
+                document.getElementById('form-kelas-wali').value=it.wali || '';
+            }
             if(t==='guru') { document.getElementById('form-guru-nama').value=it; }
             if(t==='murid') { document.getElementById('form-murid-nama').value=it.nama; document.getElementById('form-murid-kelas').value=it.kelas; }
             if(t==='petugas') { document.getElementById('form-petugas-nama').value=it.nama; document.getElementById('form-petugas-tugas').value=it.tugas; document.getElementById('form-petugas-hari').value=it.hari; }
@@ -1389,21 +1490,43 @@
         }
 
         function hapusAdminItem(t, i) {
-            showConfirmModal('Yakin hapus data ini?', async () => { appData[t].splice(i,1); renderAdminTable(t); await simpanMasterDataKeDB(true); showToast('Dihapus', 'success'); });
+            showConfirmModal('Yakin hapus data ini?', async () => { 
+                appData[t].splice(i,1); 
+                selectedAdminItems[t].clear(); // Reset selection to avoid shifted index issues
+                renderAdminTable(t); 
+                await simpanMasterDataKeDB(true); 
+                showToast('Dihapus', 'success'); 
+            });
         }
 
         function resetForm(t) {
             document.getElementById(`form-${t}-index`).value = -1; document.getElementById(`btn-simpan-${t}`).textContent = "Tambah";
-            if(t==='kelas') { document.getElementById('form-kelas-nama').value=''; document.getElementById('form-kelas-shift').selectedIndex=0; }
+            if(t==='kelas') { 
+                document.getElementById('form-kelas-nama').value=''; 
+                document.getElementById('form-kelas-shift').selectedIndex=0; 
+                document.getElementById('form-kelas-jumlah').value='';
+                document.getElementById('form-kelas-wali').value='';
+            }
             if(t==='guru') { document.getElementById('form-guru-nama').value=''; }
             if(t==='murid') { document.getElementById('form-murid-nama').value=''; document.getElementById('form-murid-kelas').value=''; }
             if(t==='petugas') { document.getElementById('form-petugas-nama').value=''; document.getElementById('form-petugas-tugas').value=''; }
         }
 
-        function simpanFormKelas() { const i=parseInt(document.getElementById('form-kelas-index').value); const d={nama:document.getElementById('form-kelas-nama').value.trim(), shift:document.getElementById('form-kelas-shift').value}; if(!d.nama) return; if(i>=0) appData.kelas[i]=d; else appData.kelas.push(d); resetForm('kelas'); renderAdminTable('kelas'); simpanMasterDataKeDB(true); }
-        function simpanFormGuru() { const i=parseInt(document.getElementById('form-guru-index').value); const n=document.getElementById('form-guru-nama').value.trim(); if(!n) return; if(i>=0) appData.guru[i]=n; else appData.guru.push(n); resetForm('guru'); renderAdminTable('guru'); simpanMasterDataKeDB(true); }
-        function simpanFormMurid() { const i=parseInt(document.getElementById('form-murid-index').value); const d={nama:document.getElementById('form-murid-nama').value.trim(), kelas:document.getElementById('form-murid-kelas').value.trim()}; if(!d.nama||!d.kelas) return; if(i>=0) appData.murid[i]=d; else appData.murid.push(d); resetForm('murid'); renderAdminTable('murid'); simpanMasterDataKeDB(true); }
-        function simpanFormPetugas() { const i=parseInt(document.getElementById('form-petugas-index').value); const d={nama:document.getElementById('form-petugas-nama').value.trim(), tugas:document.getElementById('form-petugas-tugas').value.trim(), hari:document.getElementById('form-petugas-hari').value}; if(!d.nama||!d.tugas) return; if(i>=0) appData.petugas[i]=d; else appData.petugas.push(d); resetForm('petugas'); renderAdminTable('petugas'); simpanMasterDataKeDB(true); }
+        function simpanFormKelas() { 
+            const i=parseInt(document.getElementById('form-kelas-index').value); 
+            const d={
+                nama:document.getElementById('form-kelas-nama').value.trim(), 
+                shift:document.getElementById('form-kelas-shift').value,
+                jumlah:parseInt(document.getElementById('form-kelas-jumlah').value) || 0,
+                wali:document.getElementById('form-kelas-wali').value.trim()
+            }; 
+            if(!d.nama) return; 
+            if(i>=0) appData.kelas[i]=d; else appData.kelas.push(d); 
+            resetForm('kelas'); selectedAdminItems['kelas'].clear(); renderAdminTable('kelas'); simpanMasterDataKeDB(true); 
+        }
+        function simpanFormGuru() { const i=parseInt(document.getElementById('form-guru-index').value); const n=document.getElementById('form-guru-nama').value.trim(); if(!n) return; if(i>=0) appData.guru[i]=n; else appData.guru.push(n); resetForm('guru'); selectedAdminItems['guru'].clear(); renderAdminTable('guru'); simpanMasterDataKeDB(true); }
+        function simpanFormMurid() { const i=parseInt(document.getElementById('form-murid-index').value); const d={nama:document.getElementById('form-murid-nama').value.trim(), kelas:document.getElementById('form-murid-kelas').value.trim()}; if(!d.nama||!d.kelas) return; if(i>=0) appData.murid[i]=d; else appData.murid.push(d); resetForm('murid'); selectedAdminItems['murid'].clear(); renderAdminTable('murid'); simpanMasterDataKeDB(true); }
+        function simpanFormPetugas() { const i=parseInt(document.getElementById('form-petugas-index').value); const d={nama:document.getElementById('form-petugas-nama').value.trim(), tugas:document.getElementById('form-petugas-tugas').value.trim(), hari:document.getElementById('form-petugas-hari').value}; if(!d.nama||!d.tugas) return; if(i>=0) appData.petugas[i]=d; else appData.petugas.push(d); resetForm('petugas'); selectedAdminItems['petugas'].clear(); renderAdminTable('petugas'); simpanMasterDataKeDB(true); }
 
         async function simpanMasterDataKeDB(silent = false) {
             if(!USE_MOCK_DATA) {
