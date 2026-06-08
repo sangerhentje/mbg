@@ -808,8 +808,16 @@
         }
 
         // Standardisasi parsing tanggal dari database agar tidak tergeser zona waktu lokal browser
+        // DIPERBAIKI PRESISI: Menangani masukan berupa objek Date langsung tanpa mengasumsikan string
         function parseDatabaseDate(dateStr) {
             if (!dateStr) return new Date();
+            if (dateStr instanceof Date) return dateStr;
+            
+            // Konversi ke string jika berupa tipe data lain agar tidak crash
+            if (typeof dateStr !== 'string') {
+                dateStr = String(dateStr);
+            }
+            
             if (!/[+-]\d{2}:?\d{2}$/.test(dateStr) && !dateStr.endsWith('Z')) {
                 return new Date(dateStr.replace(' ', 'T') + 'Z');
             }
@@ -1250,7 +1258,7 @@
                 hadir: parseInt(document.getElementById('keh-hadir').value) || 0, 
                 petugas: document.getElementById('keh-petugas').value 
             };
-            if (!data.kelas || !data.guru || !data.petugas) return showToast('Pilih Kelas, Guru, dan Siswa!', 'warning');
+            if (!data.kelas || !data.guru || !data.petugas) return showToast('Pilih Kelas, Guru, and Siswa!', 'warning');
 
             showLoading(true, 'Menyimpan Data...');
             const req = await dbRequest(() => supabaseClient.from('kehadiran').upsert(data, { onConflict: 'tanggal, kelas' }), 'kehadiran');
@@ -1272,7 +1280,6 @@
         }
 
         // FUNGSI UTAMA: Render Kelas yang BELUM lapor kehadiran hari ini
-        // "Modifikasi Presisi" agar penampilan di landing page sama persis dengan kotak informasi mini
         function renderKehadiranList() {
             const container = document.getElementById('riwayat-list');
             if(!container) return;
