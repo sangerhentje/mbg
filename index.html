@@ -55,7 +55,7 @@
         /* Top App Bar */
         .top-header {
             position: fixed; top: 0; left: 0; right: 0;
-            height: 70px; background: linear-gradient(135deg, var(--brand-purple-dark), var(--brand-purple));
+            height: 80px; background: linear-gradient(135deg, var(--brand-purple-dark), var(--brand-purple));
             color: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 50; box-shadow: 0 4px 15px rgba(120, 82, 169, 0.2);
             border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
@@ -93,7 +93,7 @@
 
         /* Main Content Area */
         .main-content { 
-            flex: 1; padding: 90px 15px 95px 15px; 
+            flex: 1; padding: 100px 15px 95px 15px; 
             overflow-y: auto; overflow-x: hidden; width: 100%; max-width: 800px; margin: 0 auto;
         }
         
@@ -248,7 +248,7 @@
         }
 
         @media (max-width: 768px) {
-            .main-content { padding: 85px 15px 85px 15px; }
+            .main-content { padding: 95px 15px 85px 15px; }
         }
     </style>
 </head>
@@ -263,9 +263,15 @@
     <!-- Header Atas -->
     <header class="top-header">
         <h2>Pencatatan dan Distribusi Makanan</h2>
-        <div id="db-status" class="db-status-badge">
-            <span id="db-status-dot" class="db-status-dot"></span>
-            <span id="db-status-text">Menghubungkan...</span>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+            <div id="db-status" class="db-status-badge">
+                <span id="db-status-dot" class="db-status-dot"></span>
+                <span id="db-status-text">Menghubungkan...</span>
+            </div>
+            <div class="db-status-badge" style="font-weight: 500;">
+                <span>📅</span>
+                <span id="current-datetime">Memuat Waktu...</span>
+            </div>
         </div>
     </header>
 
@@ -284,10 +290,6 @@
         <section id="page-kehadiran" class="page active">
             <div class="card">
                 <h2 style="display: flex; align-items: center; gap: 10px;">📋 Form Kehadiran</h2>
-                <div class="form-group">
-                    <label>Tanggal Pencatatan</label>
-                    <input type="date" id="keh-tanggal" class="form-control" readonly>
-                </div>
                 <div class="form-group">
                     <label>Pilih Kelas</label>
                     <select id="keh-kelas" class="form-control" onchange="updatePetugasDropdown()" required></select>
@@ -517,7 +519,7 @@
                             <select id="form-kelas-shift" class="form-control">
                                 <option value="Pagi">Pagi</option><option value="Siang">Siang</option>
                             </select>
-                            <input type="number" id="form-kelas-jumlah" class="form-control" placeholder="Jumlah Siswa" onkeydown="if(event.key==='Enter') simpanFormKelas()">
+                            <input type="number" id="form-kelas-jumlah" class="form-control" placeholder="Jml Siswa" onkeydown="if(event.key==='Enter') simpanFormKelas()">
                             <input type="text" id="form-kelas-wali" class="form-control" placeholder="Wali Kelas" onkeydown="if(event.key==='Enter') simpanFormKelas()">
                         </div>
                         <div style="display:flex; gap:10px;">
@@ -643,8 +645,8 @@
         <div class="modal-content" style="max-width: 360px;">
             <h3>LOG IN</h3>
             <p>Masukkan kata sandi akses.</p>
-            <input type="password" id="auth-pin" class="form-control" placeholder="Password" onkeydown="if(event.key==='Enter') verifyPin()">
-            <button class="btn" style="margin-top: 25px;" onclick="verifyPin()">NEXT</button>
+            <input type="password" id="auth-pin" class="form-control" placeholder="Kata sandi" onkeydown="if(event.key==='Enter') verifyPin()">
+            <button class="btn" style="margin-top: 25px;" onclick="verifyPin()">SETERUSNYA</button>
             <button class="btn btn-outline" style="margin-top: 10px;" onclick="closeModal('auth-modal')">Batal</button>
         </div>
     </div>
@@ -695,6 +697,7 @@
                     <input type="text" id="edit-sppg-karbo" class="form-control mb-2" placeholder="Karbo">
                     <input type="text" id="edit-sppg-sayur" class="form-control mb-2" placeholder="Sayur">
                     <input type="text" id="edit-sppg-buah" class="form-control mb-2" placeholder="Buah">
+                    <input type="text" id="edit-sppg-lainnya" class="form-control mb-2" placeholder="Lainnya">
                 </div>
                 <div class="form-group">
                     <label>Ubah Foto</label>
@@ -749,7 +752,7 @@
             <p id="confirm-message" style="margin-bottom: 25px; color: var(--text-muted); font-size: 0.95rem; margin-top: 10px;"></p>
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-outline" onclick="closeConfirmModal()">Batal</button>
-                <button class="btn" id="confirm-btn">Lanjutkan</button>
+                <button class="btn" id="confirm-btn">Teruskan</button>
             </div>
         </div>
     </div>
@@ -805,12 +808,10 @@
         }
 
         // Standardisasi parsing tanggal dari database agar tidak tergeser zona waktu lokal browser
-        // DIPERBAIKI PRESISI: Menangani masukan berupa objek Date langsung tanpa mengasumsikan string
         function parseDatabaseDate(dateStr) {
             if (!dateStr) return new Date();
             if (dateStr instanceof Date) return dateStr;
             
-            // Konversi ke string jika berupa tipe data lain agar tidak crash
             if (typeof dateStr !== 'string') {
                 dateStr = String(dateStr);
             }
@@ -821,7 +822,7 @@
             return new Date(dateStr);
         }
 
-        // Mengubah string datetime-local input (YYYY-MM-DDTHH:mm) menjadi string ISO lokal lengkap dengan offset timezone
+        // Mengubah string datetime-local input menjadi string ISO lokal lengkap dengan offset timezone
         function toLocalISOString(dateTimeLocalVal) {
             if (!dateTimeLocalVal) return null;
             const parts = dateTimeLocalVal.split('T');
@@ -908,7 +909,7 @@
                 } catch (err) {
                     console.warn(`Koneksi Supabase [${tableNameForError}] terganggu (Percobaan ${i+1}/${retries}). Mencoba kembali dalam ${delay}ms...`);
                     if (i === retries - 1) {
-                        console.error(`Gagal menghubungkan ke tabel [${tableNameForError}] setelah ${retries} kali percobaan.`, err);
+                        console.error(`Gagal menghubungkan ke tabel [${tableNameForError}] setelah ${retries} kali` , err);
                         return { error: err, data: null };
                     }
                     await new Promise(res => setTimeout(r => res(), delay));
@@ -924,7 +925,6 @@
             }
             
             const today = getToday();
-            
             const yesterdayDate = new Date();
             yesterdayDate.setDate(yesterdayDate.getDate() - 1);
             const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
@@ -986,7 +986,7 @@
                 }
 
             } catch (err) {
-                console.error("Terjadi error saat pengambilan data paralel:", err);
+                console.error("Terjadi ralat saat pengambilan data paralel:", err);
                 isError = true;
             }
             
@@ -1003,14 +1003,26 @@
             }
         }
 
-        // Pengaturan sinkronisasi realtime melalui Supabase Channel
+        function isCanvasEnvironment() {
+            try {
+                return window.self !== window.top && document.referrer === '';
+            } catch (e) {
+                return true;
+            }
+        }
+
         function setupRealtimeSync() {
+            if (isCanvasEnvironment()) {
+                console.log("Menjalankan dalam persekitaran Canvas yang aman. Sinkronisasi real-time (WebSocket) dilangkau untuk mencegah ralat keamanan.");
+                return;
+            }
+
             try {
                 supabaseClient
                     .channel('supabase-realtime-sync')
                     .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
                         const table = payload.table;
-                        console.log(`Database Cloud [${table}] diperbarui. Menyinkronkan selektif...`);
+                        console.log(`Pangkalan Data Cloud [${table}] diperbarui. Menyinkronkan...`);
                         
                         const today = getToday();
                         
@@ -1076,37 +1088,13 @@
                     })
                     .subscribe();
             } catch (err) {
-                console.warn("Gagal inisialisasi Realtime Sync. Fitur kolaboratif tidak aktif sementara.", err);
+                console.warn("Gagal memulakan Realtime Sync.", err);
             }
         }
 
-        async function initApp() {
-            if(window.appReady) return;
-            window.appReady = true;
-            
-            const select = document.getElementById('report-date');
-            if (select) {
-                select.innerHTML = '';
-                for(let i=0; i<7; i++) {
-                    const d = new Date(); d.setDate(d.getDate() - i);
-                    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    const label = d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-                    select.innerHTML += `<option value="${val}">${label}</option>`;
-                }
-            }
-            
-            const hapusTanggalInput = document.getElementById('hapus-tanggal');
-            if (hapusTanggalInput) hapusTanggalInput.value = getToday();
-            
-            await fetchAllData();
-            setupRealtimeSync();
-            initKehadiranPage();
-        }
-
-        /* ==================== PAGE ROUTING & NAVIGATION ==================== */
         let pendingTarget = '';
         let pendingPin = '';
-        
+
         function navigateMain(target) {
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
@@ -1196,6 +1184,43 @@
             if(subId === 'laporan') renderCatatanPICList();
         }
 
+        function startLiveClock() {
+            const updateClock = () => {
+                const el = document.getElementById('current-datetime');
+                if (!el) return;
+                const now = new Date();
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                el.textContent = now.toLocaleDateString('id-ID', options).replace(' pukul', ' •');
+            };
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        async function initApp() {
+            if(window.appReady) return;
+            window.appReady = true;
+            
+            startLiveClock();
+            
+            const select = document.getElementById('report-date');
+            if (select) {
+                select.innerHTML = '';
+                for(let i=0; i<7; i++) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    const label = d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                    select.innerHTML += `<option value="${val}">${label}</option>`;
+                }
+            }
+            
+            const hapusTanggalInput = document.getElementById('hapus-tanggal');
+            if (hapusTanggalInput) hapusTanggalInput.value = getToday();
+            
+            await fetchAllData();
+            setupRealtimeSync();
+            initKehadiranPage();
+        }
+
         /* ==================== PAGE: KEHADIRAN & BELUM LAPOR ==================== */
         function renderOnDuty() {
             const container = document.getElementById('on-duty-container');
@@ -1219,9 +1244,6 @@
         }
 
         function initKehadiranPage() {
-            const tglEl = document.getElementById('keh-tanggal');
-            if (tglEl) tglEl.value = getToday();
-            
             const kelasEl = document.getElementById('keh-kelas');
             if (kelasEl) {
                 kelasEl.innerHTML = `<option value="" disabled selected>-- Pilih Kelas --</option>` + appData.kelas.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
@@ -1254,7 +1276,7 @@
                 hadir: parseInt(document.getElementById('keh-hadir').value) || 0, 
                 petugas: document.getElementById('keh-petugas').value 
             };
-            if (!data.kelas || !data.guru || !data.petugas) return showToast('Pilih Kelas, Guru, and Siswa!', 'warning');
+            if (!data.kelas || !data.guru || !data.petugas) return showToast('Pilih Kelas, Guru, dan Siswa!', 'warning');
 
             showLoading(true, 'Menyimpan Data...');
             const req = await dbRequest(() => supabaseClient.from('kehadiran').upsert(data, { onConflict: 'tanggal, kelas' }), 'kehadiran');
@@ -1275,17 +1297,12 @@
             }
         }
 
-        // FUNGSI UTAMA: Render Kelas yang BELUM lapor kehadiran hari ini
         function renderKehadiranList() {
             const container = document.getElementById('riwayat-list');
             if(!container) return;
 
             const todayData = appData.kehadiran[getToday()] || {};
-            
-            // Urutkan kelas berdasarkan nama dari A ke Z
             const sortedKelas = [...appData.kelas].sort((a, b) => a.nama.localeCompare(b.nama));
-            
-            // Filter hanya kelas yang belum menginput laporan kehadiran hari ini
             const belumIsi = sortedKelas.filter(kls => !todayData[kls.nama]);
 
             if (belumIsi.length === 0) {
@@ -1298,7 +1315,6 @@
                 return;
             }
 
-            // Memperbarui tampilan agar menampilkan daftar kelas horizontal dengan warna merah, konsisten seperti widget panel monitoring
             container.innerHTML = `
                 <div style="font-size: 0.85rem; font-weight: 500; color: #b91c1c; background: #fef2f2; padding: 14px 18px; border-radius: 14px; border: 1px solid #fca5a5; line-height: 1.6; box-shadow: 0 2px 8px rgba(185, 28, 28, 0.03);">
                     ⚠️ <b style="color: #991b1b;">Belum Lapor Kehadiran:</b> ${belumIsi.map(kls => kls.nama).join(', ')}
@@ -1312,7 +1328,6 @@
             let htmlPagi = '', htmlSiang = '';
             let missingPagi = [], missingSiang = [];
             
-            // Urutkan kelas dari A ke Z secara alfabetis
             const sortedKelas = [...appData.kelas].sort((a, b) => a.nama.localeCompare(b.nama));
             
             sortedKelas.forEach(kls => {
@@ -1328,19 +1343,19 @@
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
                 const totM = kls.jumlah || 0; 
                 
+                // MENCABUT ATRIBUT DISABLED PADA INPUT TRAY
                 const row = `<tr>
                     <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
                     <td class="text-center" style="vertical-align:middle; font-weight:800; color:var(--brand-purple); font-size:1.1rem;">${kData.hadir}</td>
                     <td><b>${kData.petugas}</b><br><small class="text-muted">${kData.guru}</small></td>
                     <td class="text-center" style="vertical-align:middle;"><input type="number" id="mbg_${sid}" class="table-inline-input" value="${mbg}" placeholder="${kData.hadir}" onchange="updateMbgTray('${kls.nama}', 'mbg', this.value)"></td>
-                    <td class="text-center" style="vertical-align:middle;"><input type="number" id="tray_${sid}" class="table-inline-input" value="${tray}" placeholder="${mbg!==''?mbg:'-'}" ${mbg===''?'disabled':''} onchange="updateMbgTray('${kls.nama}', 'tray', this.value)"></td>
+                    <td class="text-center" style="vertical-align:middle;"><input type="number" id="tray_${sid}" class="table-inline-input" value="${tray}" placeholder="${mbg!==''?mbg:(kData.hadir||'-')}" onchange="updateMbgTray('${kls.nama}', 'tray', this.value)"></td>
                 </tr>`;
                 kls.shift === 'Pagi' ? htmlPagi += row : htmlSiang += row;
             });
             document.getElementById('mon-body-pagi').innerHTML = htmlPagi || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
             document.getElementById('mon-body-siang').innerHTML = htmlSiang || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
             
-            // Render peringatan kelas yang belum mengisi (Pagi)
             const mPagiEl = document.getElementById('missing-pagi');
             if (missingPagi.length > 0) {
                 mPagiEl.style.display = 'block';
@@ -1349,7 +1364,6 @@
                 mPagiEl.style.display = 'none';
             }
 
-            // Render peringatan kelas yang belum mengisi (Siang)
             const mSiangEl = document.getElementById('missing-siang');
             if (missingSiang.length > 0) {
                 mSiangEl.style.display = 'block';
@@ -1363,7 +1377,7 @@
             const inputVal = val === '' ? 0 : parseInt(val);
             if (type === 'mbg') {
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
-                if(trInp) { trInp.disabled = (inputVal===0); trInp.placeholder = inputVal===0?'-':inputVal; }
+                if(trInp) { trInp.placeholder = inputVal===0?'-':inputVal; }
             }
             if (appData.kehadiran[getToday()] && appData.kehadiran[getToday()][kls]) {
                 appData.kehadiran[getToday()][kls][type] = inputVal;
@@ -1444,11 +1458,9 @@
             const j = parseInt(document.getElementById('sppg-jumlah').value);
             if(!p || !j) return showToast('Lengkapi Nama Kurir & Jml!', 'warning');
             
-            // MODIFIKASI PRESISI: Menghapus input waktu dari UI, waktu otomatis terbuat saat tombol diklik.
-            // Gunakan konversi ISO lokal yang presisi dari tanggal saat ini.
             const now = new Date();
-            const rawLocalString = formatToDateTimeLocal(now); // Dapatkan format YYYY-MM-DDTHH:mm
-            const timezoneISO = toLocalISOString(rawLocalString); // Konversi ke ISO lengkap dengan Timezone Offset
+            const rawLocalString = formatToDateTimeLocal(now); 
+            const timezoneISO = toLocalISOString(rawLocalString); 
 
             draftSppg = { 
                 id: crypto.randomUUID(), 
@@ -1509,20 +1521,41 @@
             tbody.innerHTML = appData.sppg.map(s => {
                 const w = parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
                 const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`].filter(Boolean).join('<br>');
-                const f = s.foto ? `<br><a href="${s.foto}" target="_blank" style="font-size:0.75rem; color: var(--brand-purple);">📸 Lihat</a>` : '';
-                return `<tr><td>${w}</td><td><b>${s.jumlah}</b><br><small>${s.petugas}</small></td><td><span style="font-size:0.8rem">${m}${f}</span></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="bukaEditSPPG('${s.id}')">✏️</button></td></tr>`;
+                const f = s.foto ? `<br><span onclick="bukaFotoViewer('${s.id}')" style="font-size:0.75rem; color: var(--brand-purple); cursor: pointer;">📸 Lihat Foto</span>` : '';
+                return `<tr><td>${w}</td><td><b>${s.jumlah}</b><br><small>${s.petugas}</small></td><td><span style="font-size:0.8rem">${m}${f}</span></td><td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="bukaEditSPPG('${s.id}')">✏️</button><button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusSPPG('${s.id}')">🗑️</button></td></tr>`;
             }).join('');
+        }
+
+        function bukaFotoViewer(id) {
+            const d = appData.sppg.find(x => x.id === id);
+            if(d && d.foto) {
+                const win = window.open();
+                win.document.write('<html style="height:100%;"><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#0f172a;height:100%;"><img src="' + d.foto + '" style="max-width:100%;max-height:100%;"></body></html>');
+            }
+        }
+
+        function hapusSPPG(id) {
+            showConfirmModal('Yakin ingin menghapus data penerimaan ini?', async () => {
+                showLoading(true, 'Menghapus...');
+                await dbRequest(() => supabaseClient.from('sppg').delete().eq('id', id), 'sppg');
+                showLoading(false);
+                appData.sppg = appData.sppg.filter(x => x.id !== id);
+                renderSPPGList();
+                updateRekapitulasi();
+                showToast('Data dihapus', 'success');
+            });
         }
 
         function bukaEditSPPG(id) {
             const d = appData.sppg.find(x=>x.id===id); if(!d) return;
             document.getElementById('edit-sppg-id').value = d.id;
-            
             document.getElementById('edit-sppg-waktu').value = formatToDateTimeLocal(d.waktu);
-            
             document.getElementById('edit-sppg-petugas').value = d.petugas||''; 
             document.getElementById('edit-sppg-jumlah').value = d.jumlah||'';
-            ['protein','karbo','sayur','buah','lainnya'].forEach(f => document.getElementById(`edit-sppg-${f}`).value = d[f]||'');
+            ['protein','karbo','sayur','buah','lainnya'].forEach(f => {
+                const el = document.getElementById(`edit-sppg-${f}`);
+                if (el) el.value = d[f]||'';
+            });
             const prev = document.getElementById('edit-sppg-foto-preview');
             if(d.foto) { prev.src = d.foto; prev.style.display='block'; } else prev.style.display='none';
             editSppgFotoBase64 = null; document.getElementById('edit-sppg-foto-input').value=''; openModal('sppg-edit-modal');
@@ -1537,7 +1570,10 @@
                 petugas: document.getElementById('edit-sppg-petugas').value,
                 jumlah: parseInt(document.getElementById('edit-sppg-jumlah').value)
             };
-            ['protein','karbo','sayur','buah','lainnya'].forEach(f => up[f] = document.getElementById(`edit-sppg-${f}`).value);
+            ['protein','karbo','sayur','buah','lainnya'].forEach(f => {
+                const el = document.getElementById(`edit-sppg-${f}`);
+                if (el) up[f] = el.value;
+            });
             if(editSppgFotoBase64) up.foto = editSppgFotoBase64;
 
             showLoading(true, 'Menyimpan...');
@@ -1570,9 +1606,28 @@
             const tbody = document.getElementById('pic-riwayat-body');
             if(appData.catatan_pic.length===0) return tbody.innerHTML = '<tr><td colspan="3" class="text-center">Kosong</td></tr>';
             tbody.innerHTML = appData.catatan_pic.map(c => {
-                const f = c.foto ? `<br><a href="${c.foto}" target="_blank" style="font-size:0.75rem; color: var(--brand-purple);">📸 Lihat Foto</a>` : '';
-                return `<tr><td><b>${c.nama||'-'}</b></td><td><div style="font-size:0.8rem; white-space:pre-wrap;">${c.catatan||'-'}${f}</div></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="bukaEditPIC('${c.id}')">✏️</button></td></tr>`;
+                const f = c.foto ? `<br><span onclick="bukaFotoPIC('${c.id}')" style="font-size:0.75rem; color: var(--brand-purple); cursor: pointer;">📸 Lihat Foto</span>` : '';
+                return `<tr><td><b>${c.nama||'-'}</b></td><td><div style="font-size:0.8rem; white-space:pre-wrap;">${c.catatan||'-'}${f}</div></td><td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="bukaEditPIC('${c.id}')">✏️</button><button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusPIC('${c.id}')">🗑️</button></td></tr>`;
             }).join('');
+        }
+
+        function bukaFotoPIC(id) {
+            const c = appData.catatan_pic.find(x => x.id === id);
+            if(c && c.foto) {
+                const win = window.open();
+                win.document.write('<html style="height:100%;"><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#0f172a;height:100%;"><img src="' + c.foto + '" style="max-width:100%;max-height:100%;"></body></html>');
+            }
+        }
+
+        function hapusPIC(id) {
+            showConfirmModal('Yakin ingin menghapus catatan ini?', async () => {
+                showLoading(true, 'Menghapus...');
+                await dbRequest(() => supabaseClient.from('catatan_pic').delete().eq('id', id), 'catatan_pic');
+                showLoading(false);
+                appData.catatan_pic = appData.catatan_pic.filter(x => x.id !== id);
+                renderCatatanPICList();
+                showToast('Catatan dihapus', 'success');
+            });
         }
 
         function bukaEditPIC(id) {
