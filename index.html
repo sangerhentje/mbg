@@ -177,6 +177,30 @@
         .table-inline-input:focus { border-color: var(--brand-orange); background: var(--white); outline: none; }
         .table-inline-input:disabled { background-color: #e2e8f0; color: #94a3b8; border-color: transparent; }
 
+        /* Gaya Khusus Kolom Distribusi Box (Warna Oranye) */
+        .input-distribusi {
+            border-color: #fed7aa !important;
+            color: #c2410c !important;
+            background-color: #fffbfa;
+        }
+        .input-distribusi:focus {
+            border-color: var(--brand-orange) !important;
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2) !important;
+        }
+
+        /* Gaya Khusus Kolom Tray Kembali (Warna Hijau) */
+        .input-tray {
+            border-color: #a7f3d0 !important;
+            color: #047857 !important;
+            background-color: #f6fdfa;
+        }
+        .input-tray:focus {
+            border-color: var(--success) !important;
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+        }
+
         /* Modals */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6);
@@ -361,7 +385,15 @@
                     <h3>☀️ Distribusi (Shift Pagi)</h3>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Kelas</th><th class="text-center">Hadir</th><th>Petugas murid</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Kelas</th>
+                                    <th class="text-center">Hadir</th>
+                                    <th>Petugas murid</th>
+                                    <th class="text-center" style="color: #c2410c; min-width: 100px;">🍱 Distribusi Box</th>
+                                    <th class="text-center" style="color: #047857; min-width: 100px;">🔄 Tray Kembali</th>
+                                </tr>
+                            </thead>
                             <tbody id="mon-body-pagi"></tbody>
                         </table>
                     </div>
@@ -372,7 +404,15 @@
                     <h3>🌤️ Distribusi (Shift Siang)</h3>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Kelas</th><th class="text-center">Hadir</th><th>Petugas murid</th><th class="text-center">Distribusi</th><th class="text-center">Tray</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Kelas</th>
+                                    <th class="text-center">Hadir</th>
+                                    <th>Petugas murid</th>
+                                    <th class="text-center" style="color: #c2410c; min-width: 100px;">🍱 Distribusi Box</th>
+                                    <th class="text-center" style="color: #047857; min-width: 100px;">🔄 Tray Kembali</th>
+                                </tr>
+                            </thead>
                             <tbody id="mon-body-siang"></tbody>
                         </table>
                     </div>
@@ -406,7 +446,6 @@
             <div id="sub-sppg" class="sub-page">
                 <div class="card">
                     <h2>🚚 Input SPPG</h2>
-                    <!-- Field Waktu Tiba visual dihilangkan agar diisi otomatis oleh timestamp backend saat submit -->
                     <div class="form-group"><label>Kurir SPPG</label><input type="text" id="sppg-petugas" class="form-control" placeholder="Nama kurir"></div>
                     <div class="form-group"><label>Jumlah Diterima</label><input type="number" id="sppg-jumlah" class="form-control" placeholder="0" onkeydown="if(event.key==='Enter') mulaiSimpanSPPG()"></div>
                     <button class="btn" onclick="mulaiSimpanSPPG()">Lanjut Input Menu ➔</button>
@@ -776,7 +815,6 @@
 
         let appData = { kelas: [], guru: [], murid: [], petugas: [], kehadiran: {}, personnel: [], sppg: [], catatan_pic: [] };
         
-        // MODIFIKASI PRESISI: Mengambil State Auth dari Session Storage agar tidak hilang saat Refresh
         let authState = JSON.parse(sessionStorage.getItem('app_authState')) || { monitoring: false, admin: false };
 
         let draftSppg = {};
@@ -788,6 +826,19 @@
         let adminPage = { kelas: 1, guru: 1, murid: 1, petugas: 1 };
         let selectedAdminItems = { kelas: new Set(), guru: new Set(), murid: new Set(), petugas: new Set() };
         const ADMIN_PER_PAGE = 10;
+
+        // Fungsi pembantu cerdas untuk mencegah hilangnya kursor dan kegagalan input saat auto-polling
+        function safeRenderHTML(containerId, newHTML) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            // Jika user sedang aktif mengetik/memfokuskan sesuatu di dalam kontainer ini, tunda perenderan tabel tersebut
+            if (container.contains(document.activeElement)) {
+                console.log(`Mengamankan input user: Menunda render #${containerId} agar kursor tidak hilang.`);
+                return;
+            }
+            container.innerHTML = newHTML;
+        }
 
         function showLoading(show, customText) { 
             const loader = document.getElementById('app-loader');
@@ -1003,7 +1054,7 @@
 
         function setupRealtimeSync() {
             if (isCanvasEnvironment()) {
-                console.log("Berjalan di lingkungan Canvas yang aman. Sinkronisasi real-time (WebSocket) dilewati untuk mencegah error keamanan.");
+                console.log("Berjalan di lingkungan Canvas yang aman. Sinkronisasi real-time (WebSocket) dilewati.");
                 return;
             }
 
@@ -1082,16 +1133,14 @@
             }
         }
 
-        // MODIFIKASI PRESISI: Menambahkan sistem sinkronisasi otomatis senyap secara berkala
         let autoSyncTimer = null;
         function startAutoSync() {
             if (autoSyncTimer) clearInterval(autoSyncTimer);
             
-            // Lakukan pengecekan senyap ke Supabase Cloud setiap 10 detik
+            // Jeda sinkronisasi berkala diatur ke 10 detik agar hemat kuota dan stabil di lapangan
             autoSyncTimer = setInterval(async () => {
-                await fetchAllData(true); // silent = true agar loader jam pasir tidak muncul mengganggu ketikan
+                await fetchAllData(true); // Memperbarui data secara senyap di latar belakang
                 
-                // Perbarui halaman aktif secara dinamis
                 const activePage = document.querySelector('.page.active')?.id;
                 if (activePage === 'page-petugas') {
                     renderMonitoringTables();
@@ -1107,11 +1156,13 @@
                 } else if (activePage === 'page-admin') {
                     renderAllAdminTables();
                 }
-            }, 10000); // 10 detik sekali
+            }, 10000); 
         }
 
+        let pendingTarget = '';
+        let pendingPin = '';
+
         function navigateMain(target) {
-            // MODIFIKASI PRESISI: Menyimpan rute aktif ke sessionStorage
             sessionStorage.setItem('app_activeRoute', target);
             
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -1249,7 +1300,7 @@
             
             await fetchAllData();
             setupRealtimeSync();
-            startAutoSync(); // MODIFIKASI PRESISI: Memulai siklus auto-polling sinkronisasi background
+            startAutoSync();
             
             const savedRoute = sessionStorage.getItem('app_activeRoute') || 'kehadiran';
             if (savedRoute === 'petugas' && authState.monitoring) {
@@ -1383,17 +1434,24 @@
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
                 const totM = kls.jumlah || 0; 
                 
+                // Menambahkan kelas visual 'input-distribusi' (Warna Oranye) dan 'input-tray' (Warna Hijau) ke elemen input
                 const row = `<tr>
                     <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
                     <td class="text-center" style="vertical-align:middle; font-weight:800; color:var(--brand-purple); font-size:1.1rem;">${kData.hadir}</td>
                     <td><b>${kData.petugas}</b><br><small class="text-muted">${kData.guru}</small></td>
-                    <td class="text-center" style="vertical-align:middle;"><input type="number" id="mbg_${sid}" class="table-inline-input" value="${mbg}" placeholder="${kData.hadir}" onchange="updateMbgTray('${kls.nama}', 'mbg', this.value)"></td>
-                    <td class="text-center" style="vertical-align:middle;"><input type="number" id="tray_${sid}" class="table-inline-input" value="${tray}" placeholder="${mbg!==''?mbg:(kData.hadir||'-')}" onchange="updateMbgTray('${kls.nama}', 'tray', this.value)"></td>
+                    <td class="text-center" style="vertical-align:middle;">
+                        <input type="number" id="mbg_${sid}" class="table-inline-input input-distribusi" value="${mbg}" placeholder="${kData.hadir}" onchange="updateMbgTray('${kls.nama}', 'mbg', this.value)">
+                    </td>
+                    <td class="text-center" style="vertical-align:middle;">
+                        <input type="number" id="tray_${sid}" class="table-inline-input input-tray" value="${tray}" placeholder="${mbg!==''?mbg:(kData.hadir||'-')}" onchange="updateMbgTray('${kls.nama}', 'tray', this.value)">
+                    </td>
                 </tr>`;
                 kls.shift === 'Pagi' ? htmlPagi += row : htmlSiang += row;
             });
-            document.getElementById('mon-body-pagi').innerHTML = htmlPagi || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
-            document.getElementById('mon-body-siang').innerHTML = htmlSiang || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>';
+
+            // Menggunakan safeRenderHTML untuk mencegah rusaknya kursor saat mengetik di dalam tabel
+            safeRenderHTML('mon-body-pagi', htmlPagi || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>');
+            safeRenderHTML('mon-body-siang', htmlSiang || '<tr><td colspan="5" class="text-center text-muted">Data kosong</td></tr>');
             
             const mPagiEl = document.getElementById('missing-pagi');
             if (missingPagi.length > 0) {
@@ -1470,8 +1528,12 @@
 
         function renderPersonelList() {
             const tbody = document.getElementById('mon-personel-list');
-            if(appData.personnel.length===0) return tbody.innerHTML = '<tr><td colspan="3" class="text-center">Kosong</td></tr>';
-            tbody.innerHTML = appData.personnel.map(p => `<tr><td>${p.tipe}</td><td class="text-center"><input type="number" class="table-inline-input" value="${p.jumlah ?? ''}" onchange="updatePersonel('${p.id}', this.value)"></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="hapusPersonel('${p.id}')">🗑️</button></td></tr>`).join('');
+            if (!tbody) return;
+            
+            const html = appData.personnel.map(p => `<tr><td>${p.tipe}</td><td class="text-center"><input type="number" class="table-inline-input" value="${p.jumlah ?? ''}" onchange="updatePersonel('${p.id}', this.value)"></td><td class="text-center"><button class="btn btn-sm btn-outline" onclick="hapusPersonel('${p.id}')">🗑️</button></td></tr>`).join('');
+            
+            // Render yang aman agar input personel juga tidak kehilangan kursor saat auto-polling
+            safeRenderHTML('mon-personel-list', html || '<tr><td colspan="3" class="text-center">Kosong</td></tr>');
         }
 
         function updateRekapitulasi() {
@@ -1800,18 +1862,23 @@
             
             const st = (adminPage[type]-1) * ADMIN_PER_PAGE; const cd = d.slice(st, st+ADMIN_PER_PAGE);
             
-            if(cd.length===0) tb.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Kosong</td></tr>`;
-            else tb.innerHTML = cd.map((item, idx) => {
-                const i = st+idx; let c='';
-                const isChecked = selectedAdminItems[type].has(i) ? 'checked' : '';
-                const cb = `<td width="40"><input type="checkbox" class="cb-${type}" value="${i}" ${isChecked} onchange="toggleSelection('${type}', ${i})"></td>`;
-                
-                if(type==='kelas') c=`<td><b>${item.nama}</b></td><td>${item.shift}</td><td class="text-center">${item.jumlah || 0}</td><td>${item.wali || '-'}</td>`;
-                if(type==='guru') c=`<td><b>${item}</b></td>`;
-                if(type==='murid') c=`<td><b>${item.nama}</b></td><td>${item.kelas}</td>`;
-                if(type==='petugas') c=`<td><b>${item.nama}</b></td><td>${item.tugas}</td><td style="color:var(--brand-purple);">${item.hari}</td>`;
-                return `<tr>${cb}<td>${i+1}</td>${c}<td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="editAdminItem('${type}', ${i})">✏️</button> <button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusAdminItem('${type}', ${i})">🗑️</button></td></tr>`;
-            }).join('');
+            let html = '';
+            if (cd.length > 0) {
+                html = cd.map((item, idx) => {
+                    const i = st+idx; let c='';
+                    const isChecked = selectedAdminItems[type].has(i) ? 'checked' : '';
+                    const cb = `<td width="40"><input type="checkbox" class="cb-${type}" value="${i}" ${isChecked} onchange="toggleSelection('${type}', ${i})"></td>`;
+                    
+                    if(type==='kelas') c=`<td><b>${item.nama}</b></td><td>${item.shift}</td><td class="text-center">${item.jumlah || 0}</td><td>${item.wali || '-'}</td>`;
+                    if(type==='guru') c=`<td><b>${item}</b></td>`;
+                    if(type==='murid') c=`<td><b>${item.nama}</b></td><td>${item.kelas}</td>`;
+                    if(type==='petugas') c=`<td><b>${item.nama}</b></td><td>${item.tugas}</td><td style="color:var(--brand-purple);">${item.hari}</td>`;
+                    return `<tr>${cb}<td>${i+1}</td>${c}<td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="editAdminItem('${type}', ${i})">✏️</button> <button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusAdminItem('${type}', ${i})">🗑️</button></td></tr>`;
+                }).join('');
+            }
+
+            // Menggunakan safeRenderHTML di Admin Table
+            safeRenderHTML(`admin-tbody-${type}`, html || `<tr><td colspan="7" class="text-center text-muted">Kosong</td></tr>`);
             
             document.getElementById(`admin-page-${type}`).innerHTML = `
                 <button class="btn btn-sm btn-outline" style="flex:1;" onclick="adminPage.${type}--; renderAdminTable('${type}')" ${adminPage[type]===1?'disabled':''}>Prev</button>
