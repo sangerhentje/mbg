@@ -646,7 +646,7 @@
             <h3>LOG IN</h3>
             <p>Masukkan kata sandi akses.</p>
             <input type="password" id="auth-pin" class="form-control" placeholder="Kata sandi" onkeydown="if(event.key==='Enter') verifyPin()">
-            <button class="btn" style="margin-top: 25px;" onclick="verifyPin()">SETERUSNYA</button>
+            <button class="btn" style="margin-top: 25px;" onclick="verifyPin()">SELANJUTNYA</button>
             <button class="btn btn-outline" style="margin-top: 10px;" onclick="closeModal('auth-modal')">Batal</button>
         </div>
     </div>
@@ -909,7 +909,7 @@
                 } catch (err) {
                     console.warn(`Koneksi Supabase [${tableNameForError}] terganggu (Percobaan ${i+1}/${retries}). Mencoba kembali dalam ${delay}ms...`);
                     if (i === retries - 1) {
-                        console.error(`Gagal menghubungkan ke tabel [${tableNameForError}] setelah ${retries} kali` , err);
+                        console.error(`Gagal menghubungkan ke tabel [${tableNameForError}] setelah ${retries} kali percobaan` , err);
                         return { error: err, data: null };
                     }
                     await new Promise(res => setTimeout(r => res(), delay));
@@ -986,7 +986,7 @@
                 }
 
             } catch (err) {
-                console.error("Terjadi ralat saat pengambilan data paralel:", err);
+                console.error("Terjadi error saat pengambilan data paralel:", err);
                 isError = true;
             }
             
@@ -1013,7 +1013,7 @@
 
         function setupRealtimeSync() {
             if (isCanvasEnvironment()) {
-                console.log("Menjalankan dalam persekitaran Canvas yang aman. Sinkronisasi real-time (WebSocket) dilangkau untuk mencegah ralat keamanan.");
+                console.log("Berjalan di lingkungan Canvas yang aman. Sinkronisasi real-time (WebSocket) dilewati untuk mencegah error keamanan.");
                 return;
             }
 
@@ -1022,7 +1022,7 @@
                     .channel('supabase-realtime-sync')
                     .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
                         const table = payload.table;
-                        console.log(`Pangkalan Data Cloud [${table}] diperbarui. Menyinkronkan...`);
+                        console.log(`Database Cloud [${table}] diperbarui. Menyinkronkan...`);
                         
                         const today = getToday();
                         
@@ -1343,7 +1343,7 @@
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
                 const totM = kls.jumlah || 0; 
                 
-                // MENCABUT ATRIBUT DISABLED PADA INPUT TRAY
+                // Atribut disabled pada input Tray DIHAPUS agar bisa selalu diinput manual
                 const row = `<tr>
                     <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
                     <td class="text-center" style="vertical-align:middle; font-weight:800; color:var(--brand-purple); font-size:1.1rem;">${kData.hadir}</td>
@@ -1377,7 +1377,7 @@
             const inputVal = val === '' ? 0 : parseInt(val);
             if (type === 'mbg') {
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
-                if(trInp) { trInp.placeholder = inputVal===0?'-':inputVal; }
+                if(trInp) { trInp.placeholder = inputVal===0?'-':inputVal; } // Disabled dilepas
             }
             if (appData.kehadiran[getToday()] && appData.kehadiran[getToday()][kls]) {
                 appData.kehadiran[getToday()][kls][type] = inputVal;
@@ -1980,7 +1980,14 @@
                 
                 let sH = appData.sppg.map(s => {
                     const img = s.foto ? `<img src="${s.foto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">` : '-';
-                    return `<tr><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;">${s.petugas}</td><td style="border-bottom:1px solid #e2e8f0;padding:12px;color:#7852a9;"><b>${s.jumlah}</b></td><td style="border-bottom:1px solid #e2e8f0;padding:12px;text-align:center;">${img}</td></tr>`;
+                    const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`].filter(Boolean).join('<br>');
+                    return `<tr>
+                        <td style="border-bottom:1px solid #e2e8f0;padding:12px;">${parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+                        <td style="border-bottom:1px solid #e2e8f0;padding:12px;">${s.petugas}</td>
+                        <td style="border-bottom:1px solid #e2e8f0;padding:12px;color:#7852a9;"><b>${s.jumlah}</b></td>
+                        <td style="border-bottom:1px solid #e2e8f0;padding:12px;font-size:12px;line-height:1.4;">${m||'-'}</td>
+                        <td style="border-bottom:1px solid #e2e8f0;padding:12px;text-align:center;">${img}</td>
+                    </tr>`;
                 }).join('');
 
                 let pH = appData.catatan_pic.map(c => `
@@ -2001,8 +2008,8 @@
                     
                     <h3 style="margin-top:35px; color:#1e293b; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">Penerimaan SPPG</h3>
                     <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:10px;">
-                        <thead style="background:#f8fafc;"><tr><th style="padding:12px;text-align:left;color:#64748b;">Waktu</th><th style="padding:12px;text-align:left;color:#64748b;">Kurir</th><th style="padding:12px;text-align:left;color:#64748b;">Jml</th><th style="padding:12px;text-align:center;color:#64748b;">Foto</th></tr></thead>
-                        <tbody>${sH||'<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada data penerimaan</td></tr>'}</tbody>
+                        <thead style="background:#f8fafc;"><tr><th style="padding:12px;text-align:left;color:#64748b;">Waktu</th><th style="padding:12px;text-align:left;color:#64748b;">Kurir</th><th style="padding:12px;text-align:left;color:#64748b;">Jml</th><th style="padding:12px;text-align:left;color:#64748b;">Menu</th><th style="padding:12px;text-align:center;color:#64748b;">Foto</th></tr></thead>
+                        <tbody>${sH||'<tr><td colspan="5" style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada data penerimaan</td></tr>'}</tbody>
                     </table>
                     
                     <h3 style="margin-top:35px; color:#1e293b; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">Catatan PIC</h3>
