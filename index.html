@@ -404,10 +404,7 @@
             <div id="sub-sppg" class="sub-page">
                 <div class="card">
                     <h2>🚚 Input SPPG</h2>
-                    <div class="form-group">
-                        <label>Waktu Tiba (Otomatis Tersimpan)</label>
-                        <input type="datetime-local" id="sppg-waktu" class="form-control" readonly style="opacity: 0.7;">
-                    </div>
+                    <!-- Field Waktu Tiba visual dihilangkan agar diisi otomatis oleh timestamp backend saat submit -->
                     <div class="form-group"><label>Kurir SPPG</label><input type="text" id="sppg-petugas" class="form-control" placeholder="Nama kurir"></div>
                     <div class="form-group"><label>Jumlah Diterima</label><input type="number" id="sppg-jumlah" class="form-control" placeholder="0" onkeydown="if(event.key==='Enter') mulaiSimpanSPPG()"></div>
                     <button class="btn" onclick="mulaiSimpanSPPG()">Lanjut Input Menu ➔</button>
@@ -629,7 +626,7 @@
         </section>
     </main>
 
-    <!-- Bottom Navigation Bar (Tanpa tombol kehadiran karena kehadiran adalah Landing Page Publik) -->
+    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <div class="nav-item" id="btn-nav-petugas" onclick="attemptNavigate('petugas', 'mbg1234')">
             <div class="icon">🧑‍💼</div>
@@ -1194,7 +1191,6 @@
             if(targetSub) targetSub.classList.add('active');
 
             if(subId === 'sppg') {
-                document.getElementById('sppg-waktu').value = formatToDateTimeLocal(new Date());
                 renderSPPGList();
             }
             if(subId === 'laporan') renderCatatanPICList();
@@ -1444,12 +1440,22 @@
 
         /* ==================== PAGE: PETUGAS (SPPG) ==================== */
         function mulaiSimpanSPPG() {
-            const w = document.getElementById('sppg-waktu').value;
             const p = document.getElementById('sppg-petugas').value;
             const j = parseInt(document.getElementById('sppg-jumlah').value);
             if(!p || !j) return showToast('Lengkapi Nama Kurir & Jml!', 'warning');
             
-            draftSppg = { id: crypto.randomUUID(), waktu: toLocalISOString(w), petugas: p, jumlah: j };
+            // MODIFIKASI PRESISI: Menghapus input waktu dari UI, waktu otomatis terbuat saat tombol diklik.
+            // Gunakan konversi ISO lokal yang presisi dari tanggal saat ini.
+            const now = new Date();
+            const rawLocalString = formatToDateTimeLocal(now); // Dapatkan format YYYY-MM-DDTHH:mm
+            const timezoneISO = toLocalISOString(rawLocalString); // Konversi ke ISO lengkap dengan Timezone Offset
+
+            draftSppg = { 
+                id: crypto.randomUUID(), 
+                waktu: timezoneISO, 
+                petugas: p, 
+                jumlah: j 
+            };
             openModal('sppg-menu-modal');
         }
 
