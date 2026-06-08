@@ -655,11 +655,11 @@
     <div id="sppg-menu-modal" class="modal-overlay">
         <div class="modal-content">
             <h3>📋 Detail Menu</h3>
-            <div class="form-group"><label>Protein</label><input type="text" id="sppg-protein" class="form-control" placeholder="Ayam Goreng" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
-            <div class="form-group"><label>Karbohidrat</label><input type="text" id="sppg-karbo" class="form-control" placeholder="Nasi Putih" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
-            <div class="form-group"><label>Sayur</label><input type="text" id="sppg-sayur" class="form-control" placeholder="Capcay" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
-            <div class="form-group"><label>Buah</label><input type="text" id="sppg-buah" class="form-control" placeholder="Pisang" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
-            <div class="form-group"><label>Lainnya</label><input type="text" id="sppg-lainnya" class="form-control" placeholder="Susu UHT" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
+            <div class="form-group"><label>Protein</label><input type="text" id="sppg-protein" class="form-control" placeholder="Contoh: Ayam Goreng" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
+            <div class="form-group"><label>Karbohidrat</label><input type="text" id="sppg-karbo" class="form-control" placeholder="Contoh: Nasi Putih" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
+            <div class="form-group"><label>Sayur</label><input type="text" id="sppg-sayur" class="form-control" placeholder="Contoh: Capcay" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
+            <div class="form-group"><label>Buah</label><input type="text" id="sppg-buah" class="form-control" placeholder="Contoh: Pisang" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
+            <div class="form-group"><label>Lainnya</label><input type="text" id="sppg-lainnya" class="form-control" placeholder="Contoh: Susu UHT / Kerupuk" onkeydown="if(event.key==='Enter') simpanSppgMenu()"></div>
             <div style="display:flex; gap:10px; margin-top:25px;">
                 <button class="btn btn-outline" onclick="closeModal('sppg-menu-modal')">Batal</button>
                 <button class="btn" onclick="simpanSppgMenu()">Lanjut Foto ➔</button>
@@ -689,15 +689,15 @@
             <h3>✏️ Edit SPPG</h3>
             <input type="hidden" id="edit-sppg-id">
             <div style="max-height: 55vh; overflow-y: auto; padding-right: 8px;">
-                <div class="form-group"><label>Waktu Tiba (Otomatis)</label><input type="datetime-local" id="edit-sppg-waktu" class="form-control" readonly style="opacity: 0.7;"></div>
+                <div class="form-group"><label>Waktu Tiba</label><input type="datetime-local" id="edit-sppg-waktu" class="form-control" readonly style="opacity: 0.7;"></div>
                 <div class="form-group"><label>Kurir</label><input type="text" id="edit-sppg-petugas" class="form-control"></div>
                 <div class="form-group"><label>Jml Diterima</label><input type="number" id="edit-sppg-jumlah" class="form-control"></div>
                 <div class="form-group"><label>Menu</label>
-                    <input type="text" id="edit-sppg-protein" class="form-control mb-2" placeholder="Protein">
-                    <input type="text" id="edit-sppg-karbo" class="form-control mb-2" placeholder="Karbo">
-                    <input type="text" id="edit-sppg-sayur" class="form-control mb-2" placeholder="Sayur">
-                    <input type="text" id="edit-sppg-buah" class="form-control mb-2" placeholder="Buah">
-                    <input type="text" id="edit-sppg-lainnya" class="form-control mb-2" placeholder="Lainnya">
+                    <input type="text" id="edit-sppg-protein" class="form-control mb-2" placeholder="Contoh: Ayam Goreng">
+                    <input type="text" id="edit-sppg-karbo" class="form-control mb-2" placeholder="Contoh: Nasi Putih">
+                    <input type="text" id="edit-sppg-sayur" class="form-control mb-2" placeholder="Contoh: Capcay">
+                    <input type="text" id="edit-sppg-buah" class="form-control mb-2" placeholder="Contoh: Pisang">
+                    <input type="text" id="edit-sppg-lainnya" class="form-control mb-2" placeholder="Contoh: Susu UHT / Kerupuk">
                 </div>
                 <div class="form-group">
                     <label>Ubah Foto</label>
@@ -775,7 +775,9 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let appData = { kelas: [], guru: [], murid: [], petugas: [], kehadiran: {}, personnel: [], sppg: [], catatan_pic: [] };
-        let authState = { monitoring: false, admin: false };
+        
+        // MODIFIKASI PRESISI: Mengambil State Auth dari Session Storage agar tidak hilang saat Refresh
+        let authState = JSON.parse(sessionStorage.getItem('app_authState')) || { monitoring: false, admin: false };
 
         let draftSppg = {};
         let editSppgFotoBase64 = null; 
@@ -798,7 +800,6 @@
             }
         }
 
-        // Return YYYY-MM-DD Lokal presisi tanpa distorsi UTC
         function getToday() { 
             const d = new Date(); 
             const y = d.getFullYear();
@@ -807,42 +808,31 @@
             return `${y}-${m}-${day}`; 
         }
 
-        // Standardisasi parsing tanggal dari database agar tidak tergeser zona waktu lokal browser
         function parseDatabaseDate(dateStr) {
             if (!dateStr) return new Date();
             if (dateStr instanceof Date) return dateStr;
-            
             if (typeof dateStr !== 'string') {
                 dateStr = String(dateStr);
             }
-            
-            if (!/[+-]\d{2}:?\d{2}$/.test(dateStr) && !dateStr.endsWith('Z')) {
-                return new Date(dateStr.replace(' ', 'T') + 'Z');
-            }
-            return new Date(dateStr);
+            return new Date(dateStr.replace(' ', 'T'));
         }
 
-        // Mengubah string datetime-local input menjadi string ISO lokal lengkap dengan offset timezone
         function toLocalISOString(dateTimeLocalVal) {
             if (!dateTimeLocalVal) return null;
             const parts = dateTimeLocalVal.split('T');
             if (parts.length !== 2) return dateTimeLocalVal;
-            
             const d = new Date();
             const tzOffset = -d.getTimezoneOffset();
             const diffSign = tzOffset >= 0 ? '+' : '-';
             const pad = (num) => String(Math.floor(Math.abs(num))).padStart(2, '0');
             const tzString = diffSign + pad(tzOffset / 60) + ':' + pad(tzOffset % 60);
-            
             return `${dateTimeLocalVal}:00${tzString}`;
         }
 
-        // Mengubah ISO string / Timestamp dari database kembali ke format waktu lokal yang sesuai untuk datetime-local
         function formatToDateTimeLocal(dateString) {
             if (!dateString) return '';
             const d = parseDatabaseDate(dateString);
             if (isNaN(d.getTime())) return '';
-            
             const y = d.getFullYear();
             const m = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
@@ -1092,10 +1082,38 @@
             }
         }
 
-        let pendingTarget = '';
-        let pendingPin = '';
+        // MODIFIKASI PRESISI: Menambahkan sistem sinkronisasi otomatis senyap secara berkala
+        let autoSyncTimer = null;
+        function startAutoSync() {
+            if (autoSyncTimer) clearInterval(autoSyncTimer);
+            
+            // Lakukan pengecekan senyap ke Supabase Cloud setiap 10 detik
+            autoSyncTimer = setInterval(async () => {
+                await fetchAllData(true); // silent = true agar loader jam pasir tidak muncul mengganggu ketikan
+                
+                // Perbarui halaman aktif secara dinamis
+                const activePage = document.querySelector('.page.active')?.id;
+                if (activePage === 'page-petugas') {
+                    renderMonitoringTables();
+                    renderPersonelList();
+                    updateRekapitulasi();
+                    
+                    const activeSub = document.querySelector('#page-petugas .sub-page.active')?.id;
+                    if (activeSub === 'sub-sppg') renderSPPGList();
+                    if (activeSub === 'sub-laporan') renderCatatanPICList();
+                } else if (activePage === 'page-kehadiran') {
+                    renderOnDuty();
+                    renderKehadiranList();
+                } else if (activePage === 'page-admin') {
+                    renderAllAdminTables();
+                }
+            }, 10000); // 10 detik sekali
+        }
 
         function navigateMain(target) {
+            // MODIFIKASI PRESISI: Menyimpan rute aktif ke sessionStorage
+            sessionStorage.setItem('app_activeRoute', target);
+            
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
             
@@ -1151,6 +1169,9 @@
             if(val === pendingPin) {
                 if(pendingTarget === 'admin') authState.admin = true;
                 else authState.monitoring = true;
+                
+                sessionStorage.setItem('app_authState', JSON.stringify(authState));
+                
                 closeModal('auth-modal'); document.getElementById('auth-pin').value = '';
                 navigateMain(pendingTarget);
             } else { showToast("PIN Tidak Valid!", "error"); }
@@ -1167,8 +1188,18 @@
             openModal('logout-confirm-modal');
         }
 
-        function petugasLogout() { authState.monitoring = false; showToast('Berhasil Keluar', 'success'); navigateMain('kehadiran'); }
-        function adminLogout() { authState.admin = false; showToast('Berhasil Keluar', 'success'); navigateMain('kehadiran'); }
+        function petugasLogout() { 
+            authState.monitoring = false; 
+            sessionStorage.setItem('app_authState', JSON.stringify(authState));
+            showToast('Berhasil Keluar', 'success'); 
+            navigateMain('kehadiran'); 
+        }
+        function adminLogout() { 
+            authState.admin = false; 
+            sessionStorage.setItem('app_authState', JSON.stringify(authState));
+            showToast('Berhasil Keluar', 'success'); 
+            navigateMain('kehadiran'); 
+        }
 
         function switchSubPetugas(subId, element) {
             document.querySelectorAll('#page-petugas .tab-pill').forEach(el => el.classList.remove('active'));
@@ -1218,7 +1249,16 @@
             
             await fetchAllData();
             setupRealtimeSync();
-            initKehadiranPage();
+            startAutoSync(); // MODIFIKASI PRESISI: Memulai siklus auto-polling sinkronisasi background
+            
+            const savedRoute = sessionStorage.getItem('app_activeRoute') || 'kehadiran';
+            if (savedRoute === 'petugas' && authState.monitoring) {
+                navigateMain('petugas');
+            } else if (savedRoute === 'admin' && authState.admin) {
+                navigateMain('admin');
+            } else {
+                navigateMain('kehadiran');
+            }
         }
 
         /* ==================== PAGE: KEHADIRAN & BELUM LAPOR ==================== */
@@ -1343,7 +1383,6 @@
                 const mbg = kData.mbg ?? ''; const tray = kData.tray ?? '';
                 const totM = kls.jumlah || 0; 
                 
-                // Atribut disabled pada input Tray DIHAPUS agar bisa selalu diinput manual
                 const row = `<tr>
                     <td><b>${kls.nama}</b><br><small class="text-muted">Total: ${totM} Siswa</small></td>
                     <td class="text-center" style="vertical-align:middle; font-weight:800; color:var(--brand-purple); font-size:1.1rem;">${kData.hadir}</td>
@@ -1377,7 +1416,7 @@
             const inputVal = val === '' ? 0 : parseInt(val);
             if (type === 'mbg') {
                 const trInp = document.getElementById(`tray_${kls.replace(/\s+/g, '-')}`);
-                if(trInp) { trInp.placeholder = inputVal===0?'-':inputVal; } // Disabled dilepas
+                if(trInp) { trInp.placeholder = inputVal===0?'-':inputVal; }
             }
             if (appData.kehadiran[getToday()] && appData.kehadiran[getToday()][kls]) {
                 appData.kehadiran[getToday()][kls][type] = inputVal;
@@ -1458,13 +1497,9 @@
             const j = parseInt(document.getElementById('sppg-jumlah').value);
             if(!p || !j) return showToast('Lengkapi Nama Kurir & Jml!', 'warning');
             
-            const now = new Date();
-            const rawLocalString = formatToDateTimeLocal(now); 
-            const timezoneISO = toLocalISOString(rawLocalString); 
-
             draftSppg = { 
                 id: crypto.randomUUID(), 
-                waktu: timezoneISO, 
+                waktu: new Date().toISOString(), 
                 petugas: p, 
                 jumlah: j 
             };
@@ -1520,7 +1555,7 @@
             if(appData.sppg.length===0) return tbody.innerHTML = '<tr><td colspan="4" class="text-center">Kosong</td></tr>';
             tbody.innerHTML = appData.sppg.map(s => {
                 const w = parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-                const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`].filter(Boolean).join('<br>');
+                const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`, s.lainnya&&`Lain: ${s.lainnya}`].filter(Boolean).join('<br>');
                 const f = s.foto ? `<br><span onclick="bukaFotoViewer('${s.id}')" style="font-size:0.75rem; color: var(--brand-purple); cursor: pointer;">📸 Lihat Foto</span>` : '';
                 return `<tr><td>${w}</td><td><b>${s.jumlah}</b><br><small>${s.petugas}</small></td><td><span style="font-size:0.8rem">${m}${f}</span></td><td class="text-center"><button class="btn btn-sm btn-outline" style="padding:5px 8px; margin-right:4px;" onclick="bukaEditSPPG('${s.id}')">✏️</button><button class="btn btn-sm btn-outline" style="padding:5px 8px;" onclick="hapusSPPG('${s.id}')">🗑️</button></td></tr>`;
             }).join('');
@@ -1566,7 +1601,7 @@
             const rawWaktu = document.getElementById('edit-sppg-waktu').value;
             
             const up = {
-                waktu: toLocalISOString(rawWaktu), 
+                waktu: new Date(rawWaktu).toISOString(), 
                 petugas: document.getElementById('edit-sppg-petugas').value,
                 jumlah: parseInt(document.getElementById('edit-sppg-jumlah').value)
             };
@@ -1912,44 +1947,96 @@
                 let sisa = tTrm - tDis;
 
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: "landscape", format: "a4" });
+                const doc = new jsPDF({ orientation: "portrait", format: "a4" });
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const margin = 14;
+                const usableWidth = pageWidth - 2 * margin;
                 
-                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("Laporan Distribusi Makanan", 148.5, 15, { align: "center" });
-                doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Tanggal: ${tg}`, 14, 25);
+                doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(120, 82, 169);
+                doc.text("Laporan Harian Distribusi Makanan", pageWidth/2, 20, { align: "center" });
+                doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+                doc.text(`Tanggal: ${tg}`, pageWidth/2, 27, { align: "center" });
                 
-                doc.setFillColor(253,244,255); doc.rect(14, 30, 60, 20, 'F'); doc.setDrawColor(232,121,249); doc.rect(14, 30, 60, 20, 'S');
-                doc.setFontSize(8); doc.setTextColor(162,28,175); doc.text("TOTAL DITERIMA", 44, 36, { align:'center' });
-                doc.setFontSize(16); doc.setTextColor(162,28,175); doc.text(tTrm.toString(), 44, 45, { align:'center' });
+                const boxWidth = (usableWidth - 10) / 3;
+                let startX = margin;
                 
-                doc.setFillColor(255,247,237); doc.rect(79, 30, 60, 20, 'F'); doc.setDrawColor(252,165,165); doc.rect(79, 30, 60, 20, 'S');
-                doc.setFontSize(8); doc.setTextColor(185,28,28); doc.text("TOTAL DISTRIBUSI", 109, 36, { align:'center' });
-                doc.setFontSize(16); doc.setTextColor(185,28,28); doc.text(tDis.toString(), 109, 45, { align:'center' });
+                // Box 1 (DITERIMA)
+                doc.setFillColor(253,244,255); doc.rect(startX, 35, boxWidth, 22, 'F');
+                doc.setDrawColor(232,121,249); doc.rect(startX, 35, boxWidth, 22, 'S');
+                doc.setFontSize(8); doc.setTextColor(162,28,175); doc.setFont("helvetica", "bold");
+                doc.text("DITERIMA", startX + boxWidth/2, 43, { align:'center' });
+                doc.setFontSize(20); doc.text(tTrm.toString(), startX + boxWidth/2, 53, { align:'center' });
                 
-                doc.setFillColor(240,253,244); doc.rect(144, 30, 60, 20, 'F'); doc.setDrawColor(134,239,172); doc.rect(144, 30, 60, 20, 'S');
-                doc.setFontSize(8); doc.setTextColor(21,128,61); doc.text("SISA TERSEDIA", 174, 36, { align:'center' });
-                doc.setFontSize(16); doc.setTextColor(21,128,61); doc.text(sisa.toString(), 174, 45, { align:'center' });
+                // Box 2 (DISTRIBUSI)
+                startX += boxWidth + 5;
+                doc.setFillColor(255,247,237); doc.rect(startX, 35, boxWidth, 22, 'F');
+                doc.setDrawColor(252,165,165); doc.rect(startX, 35, boxWidth, 22, 'S');
+                doc.setFontSize(8); doc.setTextColor(185,28,28);
+                doc.text("DISTRIBUSI", startX + boxWidth/2, 43, { align:'center' });
+                doc.setFontSize(20); doc.text(tDis.toString(), startX + boxWidth/2, 53, { align:'center' });
                 
-                doc.setTextColor(0,0,0); 
+                // Box 3 (SISA)
+                startX += boxWidth + 5;
+                doc.setFillColor(240,253,244); doc.rect(startX, 35, boxWidth, 22, 'F');
+                doc.setDrawColor(134,239,172); doc.rect(startX, 35, boxWidth, 22, 'S');
+                doc.setFontSize(8); doc.setTextColor(21,128,61);
+                doc.text("SISA", startX + boxWidth/2, 43, { align:'center' });
+                doc.setFontSize(20); doc.text(sisa.toString(), startX + boxWidth/2, 53, { align:'center' });
                 
-                doc.setFontSize(11); doc.setFont("helvetica", "bold"); 
-                doc.text("Penerimaan SPPG", 14, 60); doc.text("Catatan Harian PIC", 155, 60);
+                // SPPG
+                doc.setTextColor(30, 41, 59); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
+                doc.text("Penerimaan SPPG", margin, 70);
+                doc.setDrawColor(241, 245, 249); doc.line(margin, 73, pageWidth - margin, 73);
                 
                 doc.autoTable({
-                    startY: 63, head: [['Wkt', 'Kurir', 'Jml', 'Menu']], 
-                    body: sppgData.map(s => [parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), s.petugas, s.jumlah, `Pro: ${s.protein||'-'}\nKarbo: ${s.karbo||'-'}\nSyr: ${s.sayur||'-'}`]), 
-                    theme: 'grid', headStyles: { fillColor:[120,82,169] }, styles: { fontSize:8 }, margin: { left:14, right:155 }
+                    startY: 78, head: [['Waktu', 'Kurir', 'Jml', 'Menu']], 
+                    body: sppgData.map(s => {
+                        const menuText = [s.protein&&`Pro: ${s.protein}`, s.karbo&&`Karbo: ${s.karbo}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`, s.lainnya&&`Lain: ${s.lainnya}`].filter(Boolean).join('\n') || '-';
+                        return [parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), s.petugas, s.jumlah, menuText];
+                    }), 
+                    theme: 'plain', 
+                    headStyles: { fillColor: [248, 250, 252], textColor: [100, 116, 139], fontStyle: 'bold', fontSize: 9 },
+                    bodyStyles: { borderBottomColor: [226, 232, 240], borderBottomWidth: 0.1, fontSize: 9, textColor: [51, 65, 85] },
+                    columnStyles: { 2: { fontStyle: 'bold', textColor: [120, 82, 169] } },
+                    margin: { left: margin, right: margin }
                 });
 
-                let picY = 63;
+                let finalY = doc.lastAutoTable.finalY + 15;
+                doc.setTextColor(30, 41, 59); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+                doc.text("Catatan PIC", margin, finalY);
+                doc.setDrawColor(241, 245, 249); doc.line(margin, finalY + 3, pageWidth - margin, finalY + 3);
+                
+                finalY += 10;
                 if(catData.length>0) {
-                    catData.forEach((c, i) => {
-                        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`${i+1}. PIC: ${c.nama||'-'}`, 155, picY); picY+=5;
-                        doc.setFont("helvetica", "normal"); const sc = doc.splitTextToSize(c.catatan||'-', 130); doc.text(sc, 155, picY); picY+=(sc.length*4)+4;
+                    catData.forEach((c) => {
+                        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+                        const splitCatatan = doc.splitTextToSize(c.catatan||'-', usableWidth - 10);
+                        const cardHeight = 15 + (splitCatatan.length * 4);
+                        
+                        if (finalY + cardHeight > doc.internal.pageSize.getHeight() - margin) {
+                            doc.addPage();
+                            finalY = margin;
+                        }
+
+                        doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240);
+                        doc.roundedRect(margin, finalY, usableWidth, cardHeight, 3, 3, 'FD');
+                        
+                        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(120, 82, 169);
+                        doc.text(`PIC: ${c.nama||'-'}`, margin + 5, finalY + 7);
+                        
+                        doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+                        doc.text(splitCatatan, margin + 5, finalY + 13);
+                        
+                        finalY += cardHeight + 5;
                     });
-                } else { doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text("- Kosong", 155, picY); }
+                } else { 
+                    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
+                    doc.text("Tidak ada catatan hari ini.", pageWidth/2, finalY + 5, { align: "center" }); 
+                }
 
                 doc.addPage("a4", "portrait");
-                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Data Distribusi Murid & Personel", 14, 20);
+                doc.setTextColor(30, 41, 59); doc.setFontSize(12); doc.setFont("helvetica", "bold"); 
+                doc.text("Data Distribusi Murid & Personel", margin, 20);
                 
                 doc.autoTable({
                     startY: 25, head: [['Kelas', 'Shift', 'Hadir', 'Distribusi']],
@@ -1980,7 +2067,7 @@
                 
                 let sH = appData.sppg.map(s => {
                     const img = s.foto ? `<img src="${s.foto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">` : '-';
-                    const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`].filter(Boolean).join('<br>');
+                    const m = [s.karbo&&`Karbo: ${s.karbo}`, s.protein&&`Pro: ${s.protein}`, s.sayur&&`Syr: ${s.sayur}`, s.buah&&`Bh: ${s.buah}`, s.lainnya&&`Lain: ${s.lainnya}`].filter(Boolean).join('<br>');
                     return `<tr>
                         <td style="border-bottom:1px solid #e2e8f0;padding:12px;">${parseDatabaseDate(s.waktu).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
                         <td style="border-bottom:1px solid #e2e8f0;padding:12px;">${s.petugas}</td>
